@@ -1,0 +1,26 @@
+PHẦN MỀM NỘI BỘ — PROOFMAIL
+INTERNAL USE ONLY
+
+Bản quyền (c) 2026. Mọi quyền được bảo lưu.
+
+ĐIỀU KHOẢN SỬ DỤNG
+
+1. PHẠM VI. Phần mềm Proofmail ("Phần mềm") là tài sản nội bộ của công ty,
+   chỉ được cấp phép sử dụng cho nhân viên được uỷ quyền nhằm phục vụ công
+   việc của công ty.
+
+2. CẤM PHÁT TÁN. Nghiêm cấm sao chép, chia sẻ, phân phối, đăng tải công khai,
+   bán, hoặc chuyển giao Phần mềm (toàn bộ hoặc một phần, bao gồm mã nguồn,
+   cấu hình, và tài liệu) cho bất kỳ cá nhân hoặc tổ chức nào bên ngoài công ty.
+
+3. BẢO MẬT DỮ LIỆU. Thông tin đăng nhập email (SMTP), danh sách nhà cung cấp,
+   và mọi dữ liệu xử lý qua Phần mềm là thông tin mật của công ty. Người dùng
+   có trách nhiệm giữ bí mật và không để lộ ra ngoài.
+
+4. CHẤM DỨT. Quyền sử dụng Phần mềm chấm dứt ngay khi người dùng kết thúc quan
+   hệ lao động với công ty hoặc khi bị thu hồi quyền truy cập.
+
+5. KHÔNG BẢO ĐẢM. Phần mềm được cung cấp "nguyên trạng", không kèm bảo đảm
+   dưới bất kỳ hình thức nào.
+
+Việc sử dụng Phần mềm đồng nghĩa với việc chấp nhận các điều khoản trên.

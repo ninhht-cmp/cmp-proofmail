@@ -1,0 +1,303 @@
+<html
+  lang="en"
+  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:o="urn:schemas-microsoft-com:office:office"
+>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- iOS: stop auto-resizing the text and auto-linking phone/date/address -->
+    <meta name="x-apple-disable-message-reformatting" />
+    <meta
+      name="format-detection"
+      content="telephone=no, date=no, address=no, email=no, url=no"
+    />
+    <!-- light, image-based design: lock light so clients don't invert colors -->
+    <meta name="color-scheme" content="light only" />
+    <meta name="supported-color-schemes" content="light only" />
+    <title>{{seller_name}} — Partnership Invitation</title>
+
+    <!-- Outlook (Word engine) renders images at 120dpi → blows the 640px chrome
+         images up ~25%. Force 96dpi so they size correctly. -->
+    <!--[if mso]>
+      <xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml>
+    <![endif]-->
+
+    <style>
+      /* Resets — inline styles stay the source of truth; this is a safety net
+         for clients that DO honor <style> (Apple Mail, Gmail, …). */
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+      }
+      table {
+        border-collapse: collapse;
+        mso-table-lspace: 0pt;
+        mso-table-rspace: 0pt;
+      }
+      img {
+        border: 0;
+        outline: none;
+        line-height: 100%;
+        text-decoration: none;
+        -ms-interpolation-mode: bicubic;
+      }
+      a {
+        text-decoration: none;
+      }
+
+      /* Responsive overrides ONLY (≤480px). Desktop layout lives in inline
+         styles, so clients that strip <style> degrade to the desktop look.
+         !important beats the inline values; Outlook desktop ignores @media and
+         keeps the 640px layout — intended. */
+      @media screen and (max-width: 480px) {
+        .card {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+        /* trim the 32px side padding so text gets more width on a phone */
+        .pad {
+          padding-left: 20px !important;
+          padding-right: 20px !important;
+        }
+        /* preview-store: turn the two side-by-side cells into stacked blocks */
+        .stack {
+          display: block !important;
+          width: 100% !important;
+        }
+        .stack-img {
+          padding-right: 0 !important;
+          padding-bottom: 16px !important;
+        }
+        .shot-img {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+        /* comfortable reading + tap targets */
+        .intro {
+          font-size: 16px !important;
+          line-height: 1.7 !important;
+        }
+        /* preview CTA on mobile: drop the "Preview Store:" label, center the pill */
+        .pv-label {
+          display: none !important;
+        }
+        .pv-cta {
+          margin: 12px auto 0 auto !important;
+        }
+      }
+    </style>
+  </head>
+  <!--
+  Rules that keep this rendering across mail clients:
+    • table-based layout + inline styles only (Gmail/Outlook safe; no flex/grid)
+    • brand chrome is FOUR fixed images (header / services / advantages / footer),
+      embedded inline via the assets.* cid vars (map in src/adapters/storage.js).
+    • the ONLY per-seller image is shop_image_src (the storefront screenshot).
+  All brand identity (logo, Anna, contacts, QR, the advantage copy) is baked into
+  the images, so the template carries no brand.* variables — only seller data.
+  -->
+  <body
+    style="margin:0;padding:0;background:#eef1f4;font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased;"
+  >
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      style="background:#eef1f4;"
+    >
+      <tr>
+        <td align="center" style="padding:24px 12px;">
+
+          <!-- CARD -->
+          <table
+            role="presentation"
+            class="card"
+            width="640"
+            cellpadding="0"
+            cellspacing="0"
+            style="width:640px;max-width:640px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 6px 24px rgba(10,35,66,.12);"
+          >
+
+            <!-- ===================== HEADER (image) ===================== -->
+            <tr>
+              <td style="padding:0;line-height:0;">
+                <img
+                  src="{{assets.header}}"
+                  alt="ComacPro — Partnership Invitation: Connecting Construction Machinery Across Asia"
+                  width="640"
+                  style="display:block;width:100%;max-width:640px;height:auto;border:0;"
+                />
+              </td>
+            </tr>
+
+            <!-- ===================== INTRO (dynamic) ===================== -->
+            <tr>
+              <td
+                class="pad intro"
+                style="padding:26px 32px 6px 32px;color:#2b3a4a;font-size:15px;line-height:1.6;"
+              >
+                <p style="margin:0 0 12px 0;">
+                  Dear
+                  <strong>{{seller_name}}</strong>,
+                </p>
+                <p style="margin:0 0 12px 0;">
+                  My name is Anna from
+                  <a
+                    href="https://comacpro.net"
+                    target="_blank"
+                    style="color:#16306b;text-decoration:none;"
+                  ><strong>ComacPro JSC</strong></a>, a B2B marketplace
+                  specializing in used construction machinery in Vietnam and
+                  Asia.
+                </p>
+                <p style="margin:0;">
+                  While researching leading European equipment sellers, we
+                  came across
+                  <strong>{{seller_name}}</strong>
+                  and were impressed by your extensive inventory and
+                  international presence.
+                </p>
+              </td>
+            </tr>
+
+            <!-- ===================== PREVIEW STORE (screenshot | text + CTA) ===================== -->
+            <tr>
+              <td class="pad" style="padding:18px 32px 6px 32px;">
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                >
+                  <tr>
+                    <!-- Storefront screenshot (the one per-seller image) -->
+                    <td
+                      class="stack stack-img"
+                      width="290"
+                      valign="top"
+                      style="padding-right:16px;"
+                    >
+                      <table
+                        role="presentation"
+                        width="100%"
+                        cellpadding="0"
+                        cellspacing="0"
+                        style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;"
+                      >
+                        <tr>
+                          <td style="line-height:0;">
+                            <img
+                              src="{{shop_image_src}}"
+                              alt="Preview store created for {{seller_name}} on comacpro.net"
+                              width="290"
+                              class="shot-img"
+                              style="display:block;width:100%;max-width:290px;height:auto;border:0;"
+                            />
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                    <!-- Preview text + Explore button -->
+                    <td
+                      class="stack"
+                      valign="top"
+                      style="color:#2b3a4a;font-size:15px;line-height:1.6;"
+                    >
+                      <p style="margin:0 0 12px 0;">
+                        Preview store created for
+                        <strong>{{seller_name}}</strong><br />
+                        To showcase the potential of the Asian market, our team
+                        has created a preview
+                        <strong>{{seller_name}}</strong>
+                        store on comacpro.net using publicly available
+                        information and selected listings from your website.
+                      </p>
+                      <table
+                        role="presentation"
+                        class="pv-cta"
+                        cellpadding="0"
+                        cellspacing="0"
+                      >
+                        <tr>
+                          <td
+                            class="pv-label"
+                            style="font-weight:bold;color:#2b3a4a;padding-right:10px;white-space:nowrap;"
+                          >Preview Store:</td>
+                          <td style="border-radius:24px;background:#111111;">
+                            <a
+                              href="{{shop_url}}"
+                              target="_blank"
+                              style="display:inline-block;padding:12px 26px;color:#ffffff;font-size:14px;font-weight:bold;text-decoration:none;border-radius:24px;white-space:nowrap;"
+                            >
+                              Explore your store
+                            </a>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- ===================== SERVICES BAR (image) ===================== -->
+            <tr>
+              <td style="padding:18px 24px 6px 24px;line-height:0;">
+                <img
+                  src="{{assets.services}}"
+                  alt="Our partner sellers currently enjoy complimentary access: no listing fee · no store management fee · connecting buyers directly with sellers"
+                  width="592"
+                  style="display:block;width:100%;max-width:592px;height:auto;border:0;border-radius:10px;"
+                />
+              </td>
+            </tr>
+
+            <!-- ===================== ADVANTAGES + CLOSING CTA (image) ===================== -->
+            <tr>
+              <td style="padding:8px 24px 6px 24px;line-height:0;">
+                <img
+                  src="{{assets.advantages}}"
+                  alt="ComacPro offers meaningful advantages in the Asian construction machinery market: greater visibility among buyers in Asia, additional marketing exposure, access to market insights. If this opportunity aligns with your goals, we would be pleased to provide access for your team to manage and update the store directly."
+                  width="592"
+                  style="display:block;width:100%;max-width:592px;height:auto;border:0;"
+                />
+              </td>
+            </tr>
+
+            <!-- ===================== CLOSING LINE (text) ===================== -->
+            <tr>
+              <td
+                class="pad"
+                style="padding:12px 32px 18px 32px;color:#516072;font-size:14px;font-style:italic;line-height:1.6;"
+              >
+                We would be delighted to hear your thoughts and would be happy
+                to provide any additional information if helpful!
+              </td>
+            </tr>
+
+            <!-- ===================== FOOTER (image: Anna | contact | QR) ===================== -->
+            <tr>
+              <td
+                style="padding:6px 24px 24px 24px;border-top:1px solid #eef1f4;line-height:0;"
+              >
+                <img
+                  src="{{assets.footer}}"
+                  alt="Anna — E-commerce Operations Executive, ComacPro JSC. seller@comacpro.net · +84 967 442 348 · comacpro.net · scan to visit comacpro.net"
+                  width="592"
+                  style="display:block;width:100%;max-width:592px;height:auto;border:0;margin-top:18px;"
+                />
+              </td>
+            </tr>
+
+          </table>
+          <!-- /CARD -->
+
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

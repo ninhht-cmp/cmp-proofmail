@@ -1,0 +1,16 @@
+node_modules/
+.env
+output/
+*.zip
+data/*.csv
+data/*.xlsx
+data/*.xls
+!data/sample-sellers.csv
+# macOS Finder metadata
+.DS_Store
+
+# Bản đang dùng trước lần update gần nhất (để rollback) — state cục bộ
+.proofmail-prev-version
+
+# Build output (tsc -> dist). Sinh tự động, không commit.
+dist/

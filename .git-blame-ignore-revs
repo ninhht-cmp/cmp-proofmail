@@ -1,0 +1,4 @@
+# Các commit chỉ-định-dạng (format thuần), bỏ qua khi chạy `git blame`.
+# Bật: git config blame.ignoreRevsFile .git-blame-ignore-revs
+# style: áp Prettier lên toàn bộ codebase
+b1732919a93ee17bb49c4909d7736fc3ed021035

@@ -1,0 +1,27 @@
+name: CI
+
+# 3 máy nhân viên tự `git pull` nhánh main → một main hỏng là 3 máy hỏng theo.
+# CI này chạy test trên mọi Pull Request và mọi push vào main, để chặn code lỗi
+# TRƯỚC khi nó tới máy nhân viên. Đây là automation đáng giá nhất cho repo này.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      # Test không mở trình duyệt → bỏ tải Chromium (~150MB) cho nhanh.
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm run build # tsc: typecheck + emit dist/ (fails CI on any type error)
+      - run: npm run format:check
+      - run: npm test # pretest rebuilds; runs against dist/
+      - run: npm run test:experimental

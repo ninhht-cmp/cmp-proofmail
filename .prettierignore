@@ -1,0 +1,6 @@
+node_modules
+output
+package-lock.json
+# Prose docs are hand-formatted (tables, Vietnamese wrapping) — don't reflow them.
+*.md
+dist
