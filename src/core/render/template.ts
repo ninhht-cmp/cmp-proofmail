@@ -23,11 +23,14 @@ function getTemplate(name: string): Compiled {
 // it to all templates at once.
 function context(
   seller: { seller_name: string; shop_url: string },
-  { imageSrc, assets }: { imageSrc: string; assets?: Record<string, string> },
+  { imageSrc, assets, shopUrl }: { imageSrc: string; assets?: Record<string, string>; shopUrl?: string },
 ) {
   return {
     seller_name: seller.seller_name,
-    shop_url: seller.shop_url,
+    // shopUrl = the CTA href (may carry an identity token); falls back to the raw
+    // shop_url when the caller doesn't tokenize. Rendering never reads config — the
+    // send pipeline computes the link and hands it in.
+    shop_url: shopUrl ?? seller.shop_url,
     shop_image_src: imageSrc,
     assets: assets || {}, // { header, services, advantages, footer } image srcs
   };
@@ -39,9 +42,10 @@ export function buildHtml(
     imageSrc,
     assets = {},
     template = 'touch',
-  }: { imageSrc: string; assets?: Record<string, string>; template?: string },
+    shopUrl,
+  }: { imageSrc: string; assets?: Record<string, string>; template?: string; shopUrl?: string },
 ): string {
-  return getTemplate(template)(context(seller, { imageSrc, assets }));
+  return getTemplate(template)(context(seller, { imageSrc, assets, shopUrl }));
 }
 
 // Plain-text part (templates/<name>.txt.hbs). This generic body is the fallback
@@ -78,11 +82,12 @@ export function buildText(
     fromName,
     contact = '',
     template = 'touch',
-  }: { fromName: string; contact?: string; template?: string },
+    shopUrl,
+  }: { fromName: string; contact?: string; template?: string; shopUrl?: string },
 ): string {
   return getTextTemplate(template)({
     seller_name: seller.seller_name,
-    shop_url: seller.shop_url,
+    shop_url: shopUrl ?? seller.shop_url,
     from_name: fromName,
     contact,
   });
