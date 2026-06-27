@@ -104,11 +104,17 @@ self-evident; match the density of the surrounding code.
 Both are CTA-link only — screenshot capture always uses the raw `shop_url`.
 
 **1. UTM marker — always on for real sends (interim tracking).** Adds
-`utm_source=email` + `utm_campaign=<mail template>` so the marketplace can tell an email
-click from an organic store visit (the FE fires `trackExploreClick` only when the marker
-is present). `utm_source` is a constant (the tool only sends email — no env to tune); the
-marker is applied whenever `shopUrlFor` gets a `utmCampaign`, which `buildMessage` always
-passes (= the template name).
+`utm_source=email` + `utm_campaign=<design>-<send-month>` (e.g. `followup-2026-06`) +
+`utm_content=explore_store` so the marketplace can tell an email click from an organic
+store visit AND tell this CTA apart from its own transactional mail — unsubscribe/
+notification links also carry `utm_source=email` (the FE fires `trackExploreClick` only
+when the marker is present, and keys on `utm_content`). `utm_source` and `utm_content` are
+constants (the tool only sends email, and every mail is the "Explore your store" CTA — no
+env to tune); `utm_campaign` is `<design>-<send-month>` (`utmCampaignFor`) so clicks
+attribute per WAVE — roll a design's waves up by prefix (`followup-%`). This URL marker is
+DISTINCT from the date-free local store id `campaignIdFor` (which must stay date-free so a
+resume keeps hitting the same store instead of re-sending). The marker is applied whenever
+`shopUrlFor` gets a `utmCampaign`, which `buildMessage` always passes.
 
 **2. Signed seller-identity token — OFF by default.** When `SHOP_URL_TOKEN_SECRET` is
 set, appends `?ref=<token>`: `sellerSlug` (from `/seller/<slug>/`) signed with `signToken`

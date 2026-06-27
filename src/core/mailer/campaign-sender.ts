@@ -12,7 +12,7 @@ import {
   brandAssetSrcs,
 } from '../../adapters/storage.js';
 import { buildHtml, buildSubject, buildText, subjectTemplateFor } from '../render/template.js';
-import { shopUrlFor } from '../render/shop-url.js';
+import { shopUrlFor, utmCampaignFor } from '../render/shop-url.js';
 import type { Seller, CaptureResult, Config, CampaignResult } from '../types.js';
 
 // Inline brand-chrome attachments, built from the same brandAssets the template
@@ -86,8 +86,12 @@ export function buildMessage(
 ) {
   // Tokenize ONCE here so the HTML and text parts carry the same CTA link (and the
   // screenshot capture, which uses seller.shop_url directly, stays un-tokenized).
-  // utm_campaign = the mail template (design) name, so clicks attribute per design.
-  const shopUrl = shopUrlFor(seller, { ...config.tracking, utmCampaign: config.mail.template });
+  // new Date() per call is fine at month granularity — every mail in a run shares the
+  // month (a run spans only tens of minutes); see utmCampaignFor.
+  const shopUrl = shopUrlFor(seller, {
+    ...config.tracking,
+    utmCampaign: utmCampaignFor(config.mail.template, new Date()),
+  });
   const html = buildHtml(seller, {
     imageSrc: 'cid:shopshot',
     assets: brandAssetSrcs(),

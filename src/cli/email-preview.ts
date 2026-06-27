@@ -8,7 +8,7 @@ import { pathToFileURL } from 'node:url';
 import { spawn } from 'node:child_process';
 import { brandAssets, paths } from '../adapters/storage.js';
 import { buildHtml, buildSubject, subjectTemplateFor } from '../core/render/template.js';
-import { shopUrlFor } from '../core/render/shop-url.js';
+import { shopUrlFor, utmCampaignFor } from '../core/render/shop-url.js';
 import type { Seller, Config } from '../core/types.js';
 
 // cid: refs only resolve in a mail client, so the preview uses file:// URLs.
@@ -33,7 +33,10 @@ export function writeEmailPreview(
     imageSrc: fileSrc(shotPath),
     assets,
     template: config.mail.template,
-    shopUrl: shopUrlFor(seller, { ...config.tracking, utmCampaign: config.mail.template }),
+    shopUrl: shopUrlFor(seller, {
+      ...config.tracking,
+      utmCampaign: utmCampaignFor(config.mail.template, new Date()),
+    }),
     unsubscribe: config.mail.unsubscribe,
   });
 
