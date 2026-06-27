@@ -3,7 +3,7 @@
 // without sending pays no startup cost.
 import type { Browser } from 'playwright';
 import { launchBrowser } from '../adapters/browser.js';
-import { captureSeller } from '../core/capture/store-capturer.js';
+import { captureShop } from '../core/capture/shop-capturer.js';
 import { makeSpinner } from './ui.js';
 import type { Seller, CaptureResult, Config } from '../core/types.js';
 
@@ -25,7 +25,7 @@ export function createBrowserSession(): BrowserSession {
       try {
         browser ??= await launchBrowser();
         spin.update(`Đang chụp gian hàng của ${seller.seller_name}...`);
-        return await captureSeller(browser, seller, { config });
+        return await captureShop(browser, seller, { config });
       } finally {
         spin.stop();
       }

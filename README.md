@@ -1,210 +1,208 @@
-# 📧 Proofmail
+# Proofmail
 
-> Gửi bằng chứng gian hàng tới nhà cung cấp.
+> Personalized storefront-proof emails for sellers.
 
-Tự động chụp ảnh gian hàng → ghép vào mẫu thiết kế → gửi email cá nhân hoá cho từng nhà cung cấp. Một mẫu duy nhất sinh ra **email HTML** (link bấm được) **và** bản **plain-text** đi kèm từ cùng một nguồn, nên hai phần không bao giờ lệch nhau. Ảnh gian hàng được **nhúng trực tiếp** trong email (inline, không phải file đính kèm rời).
+Proofmail screenshots each seller's storefront, drops it into a design template, and
+sends a personalized email. One template produces both the **HTML email** (with a
+clickable CTA) **and** its **plain-text** counterpart from a single source, so the two
+never drift. The storefront image is **inlined** in the email (not a separate attachment).
 
----
-
-## 🟢 DÀNH CHO NGƯỜI DÙNG (nhân viên sale)
-
-### Cài 1 lần
-
-1. Cài **Node.js** bản LTS: https://nodejs.org (bấm Next đến hết).
-2. Mở thư mục tool, copy file `.env.example` thành `.env`, mở bằng Notepad và điền email + mật khẩu gửi. **Hướng dẫn điền chi tiết: [`HUONG-DAN-CAU-HINH-ENV.md`](HUONG-DAN-CAU-HINH-ENV.md).**
-
-### Mỗi lần gửi — chỉ 3 bước
-
-1. Bỏ file danh sách (`.csv` hoặc `.xlsx`) vào thư mục **`data/`**. Xem file `data/sample-sellers.csv` để biết cần những cột gì.
-2. **Bấm đúp** vào:
-   - `start.bat` nếu dùng **Windows**
-   - `start.sh` nếu dùng **Mac/Linux**
-3. Làm theo hướng dẫn hiện trên màn hình: chọn file → xem thử → gõ `GUI` để gửi.
-
-> Tool sẽ **tự gửi thử 1 mail cho bạn xem trước**, và **hỏi xác nhận** trước khi gửi thật. Gửi nhầm là điều gần như không thể xảy ra.
-
-> Lỡ tắt giữa chừng? Cứ chạy lại — tool **tự bỏ qua** những NCC đã gửi, không gửi trùng.
+- **Two send modes** — interactive per-seller (default) or bulk (`--auto`).
+- **Resumable** — a crash mid-run never re-sends; already-sent sellers are skipped.
+- **Cross-platform** — pure-JS, one zip runs on Windows, macOS, and Linux.
 
 ---
 
-## ⚙️ DÀNH CHO DEV
+## Quick start
 
-> **Package manager:** dùng **npm** (đã khoá trong `package.json` qua `packageManager`). Tool cài đúng một lần trên máy mỗi nhân viên qua launcher, nên npm — có sẵn cùng Node.js, không cần cài thêm — là lựa chọn ít ma sát nhất và đảm bảo máy dev với máy người dùng cài cùng phiên bản (một lockfile duy nhất `package-lock.json`). Đừng trộn pnpm/yarn để tránh lệch lockfile.
+### For operators (sales team)
 
-### Chạy
+1. Install **Node.js LTS**: <https://nodejs.org>.
+2. Copy `.env.example` to `.env` and fill in your sending email + password.
+   Step-by-step: [`HUONG-DAN-CAU-HINH-ENV.md`](HUONG-DAN-CAU-HINH-ENV.md).
+3. Drop your list (`.csv`/`.xlsx`) into **`data/`** (see `data/sample-sellers.csv` for columns).
+4. Double-click **`start.bat`** (Windows) or **`start.sh`** (macOS/Linux) and follow the prompts.
+
+> The tool always sends one preview mail to you first and asks for confirmation before
+> sending for real. Full operator guide: [`HUONG-DAN-NHAN-VIEN.md`](HUONG-DAN-NHAN-VIEN.md).
+
+### For developers
 
 ```bash
 npm install
 npx playwright install chromium
-cp .env.example .env     # điền cấu hình (xem HUONG-DAN-CAU-HINH-ENV.md)
+cp .env.example .env          # configure (see HUONG-DAN-CAU-HINH-ENV.md)
 
-npm start                # build (tsc) rồi mở wizard hỏi-đáp (mặc định)
+npm start                     # build (tsc) → interactive wizard (default)
+npm start -- --auto           # bulk send mode
 ```
 
-Mặc định: **gửi thủ công từng người bán** — chọn nguồn, lọc/chọn từng người, gửi.
-`--auto` chạy chế độ gửi cả đợt (bulk) như cũ.
+---
 
-### TypeScript & build
+## Sending modes
 
-Mã nguồn là **TypeScript** trong `src/`. `tsc` biên dịch ra `dist/` (gitignore),
-và **`node` chạy `dist/`** — KHÔNG dùng ts-node/tsx, KHÔNG tải binary nào.
-
-```bash
-npm run build         # tsc: typecheck + emit dist/  (incremental → lần sau rất nhanh)
-npm run typecheck     # tsc --noEmit (chỉ kiểm, không emit)
-npm run format        # Prettier (ghi); format:check để chỉ kiểm
-npm test              # pretest tự build, rồi chạy test trên dist/
-```
-
-- **Chạy = build rồi node dist.** Launcher (`start.*`) tự `npm run build` (incremental,
-  gần như tức thì khi nguồn không đổi) rồi `node dist/cli/main.js`. Lỗi kiểu = build
-  fail = tool báo rõ thay vì chạy sai. Type là contract được máy ép đúng — `src/core/types.js`
-  là single source cho `Seller`/`Config`/`CampaignResult`…
-- **Tách dev/runtime deps.** Launcher người dùng cài `npm install --omit=dev`. `typescript`
-  là **dependency** (pure-JS, không tải binary) nên build được trên máy nhân viên; chỉ
-  `prettier` là devDependency. CI/dev cài đầy đủ qua `npm ci`.
-  CI gate: **build (tsc) → format:check → test → test:experimental**.
-
-**Chọn chế độ nào?**
-
-| | Thủ công (mặc định) | Cả đợt (`--auto`) |
+| | Interactive (default) | Bulk (`--auto`) |
 |---|---|---|
-| Hợp với | đợt nhỏ, chăm sóc có chọn lọc, cần kiểm soát từng mail | chiến dịch lớn (hàng trăm–nghìn NCC) |
-| Tốc độ | theo nhịp người (không throttle) | tự throttle `MAILS_PER_HOUR`, chạy hàng giờ |
-| Xem trước | **xem trước email thật trong trình duyệt** trước mỗi lần gửi | gửi thử 1 mail cho chính mình + gõ `GUI` xác nhận |
-| Rủi ro khoá tài khoản | thấp (gửi rải) | cao nếu vượt hạn mức Gmail → cân nhắc ESP (xem mục dưới) |
-| Đổi mẫu giữa chừng | có (`↻ Đổi mẫu mail`) | chọn 1 mẫu cho cả đợt |
+| Best for | small, hand-picked batches | large campaigns (hundreds–thousands) |
+| Pace | human-paced (no throttle) | throttled by `MAILS_PER_HOUR`, runs for hours |
+| Preview | real email opens in the browser before each send | one test mail to yourself + typed `GUI` to confirm |
+| Lock risk | low (spread out) | high past Gmail limits → use an ESP (see [Deliverability](#deliverability--scale)) |
+| Switch template mid-run | yes | one template per run |
 
-> Gửi >500/ngày qua Gmail dễ bị khoá — đợt lớn nên dùng `--auto` **cùng** ESP (SES/SendGrid), không phải Gmail.
+**Outlook draft mode** (`--draft`, or `MAIL_TRANSPORT=outlook-draft`): does not send over
+SMTP. It builds each mail and opens a prefilled **draft in Outlook "Classic"** (Windows)
+for you to review and send by hand; "sent" is only recorded after you confirm. Needs only
+`MAIL_FROM_EMAIL` (no `SMTP_HOST`/`PASS`). Windows + Outlook Classic only.
 
-**Chế độ điền nháp Outlook** (`--draft`, hoặc `MAIL_TRANSPORT=outlook-draft` trong `.env`):
-KHÔNG gửi qua SMTP. Chọn từng người → tool chụp gian hàng + dựng mail → **mở sẵn
-nháp** (subject + nội dung + ảnh) ngay trong app **Outlook "Classic"** trên Windows;
-bạn xem lại rồi **bấm Gửi tay**. Chỉ đánh dấu "đã gửi" sau khi bạn xác nhận đã gửi.
-Chỉ chạy trên Windows + Outlook Classic (New Outlook / Outlook web không hỗ trợ);
-ở chế độ này không cần `SMTP_HOST/PASS`, chỉ cần `MAIL_FROM_EMAIL`.
-
-### Chế độ cờ lệnh (bỏ qua wizard, để tự động hoá)
+### CLI reference
 
 ```bash
-npm run build   # 1 lần (hoặc dùng `npm start -- <cờ>` để tự build trước)
-node dist/cli/main.js --sheet="<link Google Sheets>"      # đọc danh sách từ Google Sheet
-node dist/cli/main.js --file=data/sellers.xlsx            # gửi thủ công từ file
-node dist/cli/main.js --draft --file=data/sellers.xlsx    # điền nháp vào Outlook, gửi tay (Windows)
-node dist/cli/main.js --auto --file=data/sellers.csv --yes # gửi cả đợt, không hỏi (cẩn thận!)
-npm run screenshot                                       # chỉ chụp gian hàng
+npm run build                                              # build once (or `npm start -- <flags>`)
+node dist/cli/main.js --sheet="<Google Sheets link>"       # read list from a Google Sheet
+node dist/cli/main.js --file=data/sellers.xlsx             # interactive send from a file
+node dist/cli/main.js --draft --file=data/sellers.xlsx     # fill Outlook drafts, send by hand (Windows)
+node dist/cli/main.js --auto --file=data/sellers.csv --yes # bulk send, no prompts (careful!)
+npm run screenshot                                         # capture storefronts only
 ```
 
-> Tầng B (nạp bounce/complaint của ESP, webhook) đã chuyển sang `experimental/` —
-> chưa thuộc luồng gửi hiện tại. Xem `experimental/README.md`.
+`--file=` source file · `--sheet=` Google Sheet link · `--auto` bulk · `--draft` Outlook
+drafts · `--dry` dry run (with `--auto`) · `--yes` skip confirmation.
 
-Các cờ: `--file=` chọn file; `--sheet=` link Google Sheet; `--auto` gửi cả đợt;
-`--draft` điền nháp vào Outlook để gửi tay (Windows + Outlook Classic);
-`--dry` chạy thử (chỉ với `--auto`); `--yes` bỏ câu hỏi xác nhận.
+---
 
-### Cấu trúc
+## Build & TypeScript
 
-Kiến trúc **ports & adapters**: `core/` là lõi nghiệp vụ thuần (không terminal,
-không config toàn cục); `adapters/` nói chuyện với thế giới ngoài (SMTP, trình
-duyệt, ổ đĩa); `cli/` chỉ là một interface bọc quanh core. V2 web chỉ cần thêm
-`server/` ghép tuần tự `core/capture → render → mailer` (đã tách sạch, config
-inject qua tham số), **không sửa core**.
+Source is **TypeScript** in `src/`; `tsc` compiles to `dist/` (gitignored) and **`node`
+runs `dist/`** — no ts-node/tsx, no runtime transpile.
+
+```bash
+npm run build         # tsc: typecheck + emit dist/ (incremental → fast after the first run)
+npm run typecheck     # tsc --noEmit
+npm run format        # Prettier (write); format:check to verify only
+npm test              # pretest builds, then runs tests against dist/
+```
+
+- **Run = build then node dist.** The launcher (`start.*`) runs `npm run build`
+  (incremental, near-instant when sources are unchanged) then `node dist/cli/main.js`. A
+  type error is a build failure — the tool reports it instead of running wrong. Types are
+  the machine-enforced contract; `src/core/types.ts` is the single source for
+  `Seller`/`Config`/`CampaignResult`.
+- **Split dev/runtime deps.** The user install runs `npm install --omit=dev`. `typescript`
+  is a **dependency** (pure JS, no binary download) so it builds on staff machines; only
+  `prettier` is a devDependency. CI gate: **build → format:check → test → test:experimental**.
+- **Package manager: npm**, pinned via `packageManager` in `package.json`. One lockfile
+  (`package-lock.json`); don't mix pnpm/yarn.
+
+See [`CLAUDE.md`](CLAUDE.md) for the full engineering conventions.
+
+---
+
+## Architecture
+
+**Ports & adapters.** `core/` is the pure business core (no terminal, no global config);
+`adapters/` talk to the outside world (SMTP, browser, disk); `cli/` is just one interface
+around the core. A future web V2 only adds a `server/` that chains
+`core/capture → render → mailer` (already decoupled, config injected) — **without touching
+the core**.
 
 ```
-start.bat / start.sh                ← người dùng bấm đúp vào đây (chạy bản đang ghim)
-update.bat / update.sh              ← cập nhật lên release mới (có test + tự rollback nếu lỗi)
-rollback.bat / rollback.sh          ← quay về bản liền trước nếu bản mới có vấn đề
-data/                               ← bỏ file danh sách NCC vào đây
-templates/touch.hbs                 ← MẪU THIẾT KẾ HTML mặc định (1 nguồn cho cả email lẫn ảnh)
-templates/touch.txt.hbs             ← bản plain-text đi kèm (cùng dữ liệu, không lệch)
-templates/followup.hbs              ← mẫu nhắc lại (gửi sau 'touch' cho cùng người)
-templates/followup.subject.hbs      ← tiêu đề riêng cho mẫu followup (tùy chọn; không có → dùng MAIL_SUBJECT)
-                                      Thêm mẫu: thả templates/<tên>.hbs (+ .txt.hbs, + .subject.hbs tùy chọn);
-                                      chọn mẫu ngay trên CLI (hoặc MAIL_TEMPLATE=<tên> làm mặc định / --template <tên>)
-.env                                ← cấu hình SMTP (KHÔNG commit)
+start.bat / start.sh                ← double-click entry point (runs the pinned release)
+update.bat / update.sh              ← update to a new release (runs tests, auto-rollback on failure)
+rollback.bat / rollback.sh          ← return to the previous release
+data/                               ← drop seller lists here
+templates/touch.hbs                 ← default HTML design (one source for email + image)
+templates/touch.txt.hbs             ← plain-text twin (same data, never drifts)
+templates/followup.hbs              ← follow-up design (sent after 'touch' to the same seller)
+templates/followup.subject.hbs      ← optional per-design subject (absent → MAIL_SUBJECT)
+                                      Add a design: drop templates/<name>.hbs (+ .txt.hbs, + .subject.hbs);
+                                      pick it in the CLI (or MAIL_TEMPLATE=<name> / --template <name>)
+.env                                ← SMTP config (never committed)
 
-scripts/                            ← lệnh dev (KHÔNG thuộc CLI người dùng)
-└── screenshot.js                   ← chỉ chụp gian hàng (npm run screenshot)
+scripts/                            ← dev commands (NOT part of the user CLI)
+└── screenshot.js                   ← capture storefronts only (npm run screenshot)
 
-experimental/                       ← Tầng B (ESP bounce/complaint) — CHƯA dùng trong luồng hiện tại
-├── delivery-events.js              ← chuẩn hoá sự kiện ESP (SES/SendGrid) → suppression
-├── ingest-events.js                ← nạp sự kiện ESP từ file JSON
-└── webhook-server.js               ← receiver webhook (starter) — xem experimental/README.md
+experimental/                       ← Tier B (ESP bounce/complaint) — NOT in the live flow
+├── delivery-events.js              ← normalize ESP events (SES/SendGrid) → suppression
+├── ingest-events.js                ← load ESP events from JSON
+└── webhook-server.js               ← webhook receiver (starter) — see experimental/README.md
 
-tsconfig.json                       ← cấu hình tsc (strict, emit src/ → dist/, incremental)
-src/                                ← MÃ NGUỒN TypeScript (.ts) — nơi sửa code
-├── cli/                            ← interface terminal (bọc quanh core)
-│   ├── main.ts                     ← điểm vào: chọn nguồn → manual (mặc định) / --auto
-│   ├── manual-flow.ts              ← gửi thủ công từng người bán (chọn → chụp → xem trước → gửi)
-│   ├── manual-draft-flow.ts        ← luồng điền nháp Outlook (Windows)
-│   ├── capture-step.ts             ← phiên trình duyệt lazy + spinner (dùng chung 2 luồng manual)
-│   ├── seller-picker.ts            ← chọn/lọc người bán (dùng chung)
-│   ├── template-picker.ts          ← chọn mẫu mail + campaignIdFor
-│   ├── email-preview.ts            ← render email thật ra HTML tạm + mở trình duyệt (xem trước)
-│   ├── args.ts                     ← parse cờ lệnh (--file=, --sheet=, --auto…) dùng chung
-│   └── ui.ts                       ← palette cam + banner + progress bar (ETA) + panel kết quả
-├── core/                           ← lõi nghiệp vụ thuần (không terminal, không config toàn cục)
-│   ├── types.ts                    ← ĐỊNH NGHĨA KIỂU domain (Seller/Config/CampaignResult…) — 1 nguồn
+tsconfig.json                       ← tsc config (strict, src/ → dist/, incremental)
+src/                                ← TypeScript source (.ts) — edit code here
+├── cli/                            ← terminal interface (wraps the core)
+│   ├── main.ts                     ← entry: pick source → manual (default) / --auto
+│   ├── manual-flow.ts              ← interactive per-seller send (pick → capture → preview → send)
+│   ├── manual-draft-flow.ts        ← Outlook draft flow (Windows)
+│   ├── capture-step.ts             ← lazy browser session + spinner (shared by both manual flows)
+│   ├── seller-picker.ts            ← pick/filter sellers (shared)
+│   ├── template-picker.ts          ← pick design + campaignIdFor
+│   ├── email-preview.ts            ← render the real email to temp HTML + open browser
+│   ├── args.ts                     ← parse flags (--file=, --sheet=, --auto…)
+│   └── ui.ts                       ← palette + banner + progress bar (ETA) + result panel
+├── core/                           ← pure business core (no terminal, no global config)
+│   ├── types.ts                    ← domain TYPE definitions (Seller/Config/CampaignResult…) — single source
 │   ├── sellers/
-│   │   ├── seller-loader.ts        ← đọc CSV/XLSX → mảng dòng (chịu header trống/trùng)
-│   │   └── seller-validator.ts     ← validate, loại trùng, sinh slug (hàm thuần)
+│   │   ├── seller-loader.ts        ← read CSV/XLSX → rows (tolerates blank/duplicate headers)
+│   │   └── seller-validator.ts     ← validate, dedupe, generate slug (pure)
 │   ├── capture/
-│   │   └── store-capturer.ts       ← chụp gian hàng (Playwright, song song / theo từng người, có cache)
+│   │   └── shop-capturer.ts        ← screenshot storefronts (Playwright, parallel/per-seller, cached)
 │   ├── render/
-│   │   └── template.ts             ← Handlebars: build HTML + plain-text + subject (cache compile)
+│   │   ├── template.ts             ← Handlebars: build HTML + plain-text + subject (compile cache)
+│   │   └── shop-url.ts             ← build the CTA shop_url (+ seller identity token if enabled)
 │   └── mailer/
-│       └── campaign-sender.ts      ← gửi mail (throttle, retry, checkpoint, headers chống spam)
-├── adapters/                       ← rìa I/O (cô lập thư viện ngoài)
-│   ├── browser.ts                  ← khởi tạo Chromium
-│   ├── smtp-transport.ts           ← khởi tạo nodemailer
-│   ├── google-sheet.ts             ← đọc Google Sheet qua CSV export (chỉ đọc)
-│   ├── imap-sent.ts                ← lưu bản sao vào hộp "Đã gửi" qua IMAP (best-effort)
-│   ├── outlook-draft.ts (+ .ps1)   ← mở nháp trong Outlook Classic (Windows; .ps1 là asset nguồn)
-│   └── storage.ts                  ← gom mọi đường dẫn + đọc/ghi file 1 chỗ (ghi atomic)
+│       └── campaign-sender.ts      ← send (throttle, retry, checkpoint, anti-spam headers)
+├── adapters/                       ← I/O edge (isolates third-party libs)
+│   ├── browser.ts                  ← launch Chromium
+│   ├── smtp-transport.ts           ← create the nodemailer transport
+│   ├── google-sheet.ts             ← read a Google Sheet via CSV export (read-only)
+│   ├── imap-sent.ts                ← save a copy to the "Sent" folder over IMAP (best-effort)
+│   ├── outlook-draft.ts (+ .ps1)   ← open a draft in Outlook Classic (Windows; .ps1 is the source asset)
+│   └── storage.ts                  ← all paths + file read/write in one place (atomic writes)
 ├── config/
-│   ├── app-config.ts               ← đọc .env → object cấu hình (hàm hoá, không singleton)
-│   └── env-check.ts                ← kiểm tra cấu hình còn thiếu
-└── lib/                            ← util thuần, không domain (dùng được mọi tầng)
+│   ├── app-config.ts               ← read .env → config object (factory, not a singleton)
+│   └── env-check.ts                ← report missing config
+└── lib/                            ← pure utilities, no domain (usable from any layer)
     ├── util.ts                     ← sleep(...), errMsg(...)
-    └── patterns.ts                 ← EMAIL_RE (1 nguồn cho validator + CLI)
+    ├── patterns.ts                 ← EMAIL_RE (single source for validator + CLI)
+    └── signed-token.ts             ← signToken/readToken (HMAC, generic — signs any string)
 
-dist/                               ← KẾT QUẢ build (tsc) — node chạy ở đây; gitignore, KHÔNG sửa tay
-test/                               ← unit test (.js, import từ dist/) — npm test (tự build trước)
-output/artifacts/                   ← ảnh chụp: shot_*.jpg (xoá được, tự tạo lại)
-output/state/campaign-<id>.json     ← tiến độ gửi THEO campaign (id từ tên nguồn; V2 → DB)
-output/state/suppression.json       ← danh sách do-not-send (bounce/complaint) toàn cục
-output/reports/report-<id>.csv      ← báo cáo gửi (Name/Email/Shop URL/Status/Created At…)
+dist/                               ← build output (tsc) — node runs here; gitignored, don't edit
+test/                               ← unit tests (.js, import from dist/) — npm test (builds first)
+output/artifacts/                   ← screenshots: shot_*.jpg (safe to delete, regenerated)
+output/state/campaign-<id>.json     ← per-campaign send progress (id from source name; V2 → DB)
+output/state/suppression.json       ← global do-not-send list (bounce/complaint)
+output/reports/report-<id>.csv      ← send report (Name/Email/Shop URL/Status/Created At…)
 ```
 
-### Tính năng pro
+### Highlights
 
-- **Wizard hỏi-đáp** tiếng Việt cho người không-kỹ-thuật; **cờ lệnh** cho dev.
-- Đọc cả **CSV và Excel (.xlsx)**; nhận diện cột bất kể hoa/thường/khoảng trắng.
-- **Validate** ngay khi đọc: bỏ dòng thiếu/ sai email, loại trùng, báo rõ lý do.
-- **Xem trước email thật** trong trình duyệt (thủ công) · **gửi thử** 1 mail + bắt gõ `GUI` (cả đợt).
-- **Throttle** theo `MAILS_PER_HOUR` + **retry** 2 lần khi lỗi (chế độ cả đợt).
-- **Checkpoint**: chạy lại không gửi trùng; an toàn khi tắt giữa chừng.
-- **Thanh tiến trình có ETA** ("~2.1 giờ còn lại") + panel kết quả gọn.
-
----
-
-## ⚠️ Gửi >1000 mail — đọc kỹ
-
-- Gmail giới hạn ~500 mail/ngày (Workspace ~2000). Vượt ngưỡng dễ **bị khoá tài khoản**.
-- Khuyến nghị đổi sang **Amazon SES** (~$0.1/1000 mail) / SendGrid / Resend — chỉ cần sửa 4 dòng `SMTP_*` trong `.env`, không đụng code.
-- Cấu hình **SPF + DKIM + DMARC** cho tên miền để không vào hộp thư rác.
+- **Interactive wizard** (Vietnamese) for non-technical staff; **flags** for developers.
+- Reads **CSV and Excel (.xlsx)**; matches columns regardless of case/whitespace.
+- **Validates on read**: drops rows missing/with bad emails, dedupes, reports why.
+- **Real email preview** in the browser (interactive) · **test send** + typed `GUI` (bulk).
+- **Throttle** by `MAILS_PER_HOUR` + **retry** on transient errors (bulk).
+- **Checkpoint**: re-runs never double-send; safe to interrupt.
+- **Progress bar with ETA** + a compact result panel.
 
 ---
 
-## 🖥️ ĐÓNG GÓI & CHẠY ĐA NỀN TẢNG (Windows 10/11 · macOS · Linux)
+## Deliverability & scale
 
-Tool **ship mã nguồn** (không ship sẵn thư viện/trình duyệt), launcher tự cài trên
-máy người dùng. Vì mọi thư viện đều JS thuần, **một file zip dùng chung cho cả 3
-hệ điều hành** — không cần build riêng.
+- Gmail caps at ~500 mails/day (Workspace ~2000). Exceeding it risks an **account lock**.
+- For volume, switch to **Amazon SES** (~$0.1/1000) / SendGrid / Resend — change only the
+  four `SMTP_*` lines in `.env`, no code change.
+- Configure **SPF + DKIM + DMARC** for the domain to stay out of spam.
+- A per-mail `List-Unsubscribe` header is added automatically so recipients opt out
+  instead of reporting spam.
 
-### Cài đặt (nhân viên, một lệnh)
+---
 
-Repo để **public** nên không cần đăng nhập gì. Người dùng dán đúng một lệnh:
+## Cross-platform packaging
+
+The tool **ships source** (not bundled libs/browser); the launcher installs on the user's
+machine. Because every dependency is pure JS, **one zip serves all three OSes** — no
+per-platform build.
+
+### Install (one command per OS)
 
 ```powershell
 # Windows (PowerShell)
@@ -215,96 +213,94 @@ irm https://raw.githubusercontent.com/ninhht-cmp/proofmail/main/install.ps1 | ie
 curl -fsSL https://raw.githubusercontent.com/ninhht-cmp/proofmail/main/install.sh | bash
 ```
 
-Installer `git clone` repo về `~/proofmail` (giữ `.git` → cập nhật được về sau)
-rồi chạy launcher để cài thư viện + tạo `.env`. Vì clone giữ nguyên file đã
-track theo `.gitattributes`, **EOL luôn đúng** (`start.bat`=CRLF, `start.sh`=LF) và
-**không bao giờ lọt** `.env`/`node_modules`/dữ liệu NCC thật (đều không được track).
-Yêu cầu duy nhất trên máy người dùng: **Git** (để clone + cập nhật).
+The installer `git clone`s the repo to `~/proofmail` (keeps `.git` for later updates) and
+runs the launcher to install deps + create `.env`. A clone preserves tracked files per
+`.gitattributes`, so EOL is always correct (`start.bat`=CRLF, `start.sh`=LF) and `.env`,
+`node_modules`, and real seller data (all untracked) never come along. Only requirement on
+the user machine: **Git**.
 
-### Launcher tự lo gì (khi người dùng bấm đúp)
+The launcher checks **Node.js ≥ 20**, runs `npm install` + downloads Chromium (falls back
+to Edge/Chrome on download failure — same Chromium engine, identical screenshots), and
+creates `.env` from the template if missing.
 
-1. Kiểm tra **Node.js ≥ 20** (báo rõ nếu thiếu/cũ).
-2. `npm install` + tải **Chromium**. Nếu tải Chromium lỗi (proxy/mạng) → **không
-   chặn**: tool tự dùng **Microsoft Edge** (có sẵn mọi máy Win10/11) hoặc **Google
-   Chrome**. Cùng nhân Chromium nên ảnh chụp y hệt.
-3. Tạo `.env` từ mẫu nếu chưa có, dừng để điền SMTP.
+### Per-OS notes
 
-### Lưu ý theo hệ điều hành
-
-| OS | Cần biết | Cách xử lý |
+| OS | Gotcha | Fix |
 |---|---|---|
-| **Windows 10/11** | Mở `.bat` tải từ mạng → SmartScreen cảnh báo | Bấm **"More info" → "Run anyway"** (1 lần). Có sẵn Edge nên không lo tải Chromium. |
-| **macOS** | Gatekeeper chặn `.command` tải từ mạng ("unidentified developer") | **Chuột phải → Open** (lần đầu), bấm Open. Hoặc Terminal: `xattr -dr com.apple.quarantine <thư-mục-tool>` |
-| **macOS/Linux** | `.sh`/`.command` báo "permission denied" (hiếm — `git clone` thường giữ quyền chạy) | `chmod +x start.sh start.command` |
-| **Linux** | Không có Edge/Chrome + Chromium thiếu thư viện hệ thống | `npx playwright install --with-deps chromium` (cần sudo), hoặc cài Google Chrome |
+| **Windows 10/11** | SmartScreen warns on a downloaded `.bat` | **"More info" → "Run anyway"** (once). Edge is preinstalled, so Chromium download isn't a blocker. |
+| **macOS** | Gatekeeper blocks a downloaded `.command` | **Right-click → Open** (first time). Or: `xattr -dr com.apple.quarantine <tool-dir>` |
+| **macOS/Linux** | `.sh`/`.command` "permission denied" (rare) | `chmod +x start.sh start.command` |
+| **Linux** | No Edge/Chrome + Chromium missing system libs | `npx playwright install --with-deps chromium` (needs sudo), or install Google Chrome |
 
-### Khắc phục sự cố thường gặp
+### Troubleshooting
 
-| Triệu chứng | Nguyên nhân | Cách sửa |
+| Symptom | Cause | Fix |
 |---|---|---|
-| "Chua cai Node.js" / "quá cũ" | Chưa cài hoặc Node < 20 | Cài bản **LTS** tại nodejs.org; mở **cửa sổ mới** (PATH cập nhật) |
-| Treo lâu ở bước tải Chromium | Proxy/firewall chặn CDN | Cứ chờ — khi lỗi tool vẫn chạy bằng Edge/Chrome. Hoặc cài Chrome trước. |
-| "Không mở được trình duyệt để chụp" | Không có Chromium **lẫn** Edge/Chrome | Cài Google Chrome, hoặc `npx playwright install chromium` |
-| Banner hiện ô vuông lạ trên cmd cũ | Font cmd.exe không có ký tự đặc biệt | Cosmetic — dùng Windows Terminal, không ảnh hưởng chức năng |
-| Gửi mail báo lỗi đăng nhập | Sai/thiếu App Password | Gmail/365 phải dùng **App Password**; tool tự bỏ khoảng trắng khi dán |
+| "Node.js not installed" / "too old" | Missing or Node < 20 | Install **LTS** from nodejs.org; open a **new window** (PATH refresh) |
+| Hangs on Chromium download | Proxy/firewall blocks the CDN | Wait — on failure it falls back to Edge/Chrome. Or install Chrome first. |
+| "Can't open a browser to capture" | No Chromium **and** no Edge/Chrome | Install Chrome, or `npx playwright install chromium` |
+| Banner shows boxes on old cmd | cmd.exe font lacks the glyphs | Cosmetic — use Windows Terminal |
+| Login error when sending | Wrong/missing App Password | Gmail/365 need an **App Password**; the tool strips pasted spaces |
 
 ---
 
-## 🔒 PHÂN PHỐI & TRIỂN KHAI NỘI BỘ (dành cho người quản lý tool)
+## Distribution & internal deployment
 
-Đây là phần mềm **chỉ dùng nội bộ** (xem `LICENSE.txt`). Khuyến nghị triển khai theo 3 lớp:
+Internal-use software (see `LICENSE.txt`), deployed in three layers.
 
-### Lớp 1 — Truy cập & ranh giới bí mật
+### 1 — Access & secret boundary
 
-- Repo để **public** để nhân viên cài bằng một lệnh, không phải quản lý lời mời/đăng nhập.
-- **Hệ quả phải hiểu rõ:** ai có URL đều đọc được **mã nguồn**. Điều này chấp nhận
-  được vì logic ở đây không phải bí mật thương mại, và mã vốn đã đọc được trên máy
-  người dùng dù đóng gói kiểu gì (xem ghi chú cuối mục).
-- Cái thật sự cần bảo vệ — **credential SMTP + danh sách NCC** — **không** nằm trong
-  repo (xem Lớp 2). Public repo không làm lộ chúng.
-- Nếu sau này cần che mã nguồn thật sự: chuyển sang **V2 (web app)** chạy trên server
-  của bạn (xem `experimental/`), chứ không phải private repo + zip.
+- The repo is **public** so staff install with one command (no invites/logins to manage).
+- **Consequence:** anyone with the URL can read the **source**. Acceptable here — the logic
+  isn't a trade secret, and the code is readable on the user's machine regardless of
+  packaging.
+- What actually needs protecting — **SMTP credentials + the seller list** — is **not** in
+  the repo (see layer 2). A public repo doesn't expose them.
+- If hiding the source ever becomes a real requirement, move to **V2 (web app)** on your own
+  server — not a private repo + zip.
 
-### Lớp 2 — Bảo vệ bí mật (đã có sẵn)
+### 2 — Secret protection (already in place)
 
-- File `.env` (chứa mật khẩu SMTP) **không bao giờ** được commit — `.gitignore` đảm bảo điều này, nên `git clone` không bao giờ kéo nó về máy người dùng.
-- **Không hardcode** mật khẩu trong code. Mỗi nhân viên/phòng tự điền `.env` riêng của mình.
-- Dữ liệu NCC thật trong `data/` cũng không bị đóng gói (chỉ giữ file mẫu).
+- `.env` (SMTP password) is **never** committed — `.gitignore` guarantees it, so `git clone`
+  never pulls it to a user machine.
+- **No hardcoded** passwords. Each person fills their own `.env`.
+- Real seller data in `data/` is never packaged (only the sample file is tracked).
 
-### Lớp 3 — Phân phối & cập nhật (theo **release tag**, có rollback)
+### 3 — Distribution & updates (by release tag, with rollback)
 
-Tool **không tự `git pull`** mỗi lần chạy nữa. Mỗi máy **ghim vào một bản phát hành**
-(git tag `vX.Y.Z`) đã được test; cập nhật là thao tác **chủ động, có kiểm tra, tự lùi
-được**. Lý do: lỡ bản mới lỗi thì bản đang chạy-OK không bị kéo theo.
+The tool **does not auto-`git pull`**. Each machine **pins a release** (`vX.Y.Z` tag) that
+passed tests; updating is a deliberate, tested, reversible action — so a bad release never
+drags down a working one.
 
-**Vận hành trên máy nhân viên:**
+**On a staff machine:**
 
-1. Cài **Git** một lần + dán lệnh installer (mục "Cài đặt" ở trên) → `git clone` về `~/proofmail`.
-2. **Bấm `start`** như thường — chạy đúng bản đang ghim. Nếu có release mới, launcher
-   **chỉ báo một dòng** "Có bản mới vX.Y.Z" rồi vẫn chạy bản cũ (không tự đổi gì).
-3. Muốn lên bản mới: **bấm `update`** (`update.sh`/`update.bat`). Nó: nhớ bản hiện tại →
-   checkout tag mới nhất → `npm install` → **chạy `npm test`**. Test **lỗi → tự quay về
-   bản cũ ngay**. Đạt → dùng bản mới.
-4. Bản mới qua test nhưng thực tế vẫn có vấn đề: **bấm `rollback`** (`rollback.sh`/`.bat`)
-   → quay về bản liền trước (lưu trong `.proofmail-prev-version`). Hoặc về bản bất kỳ:
+1. Install **Git** once + run the installer → `git clone` to `~/proofmail`.
+2. **Run `start`** as usual — it runs the pinned release. If a newer release exists, the
+   launcher prints one line ("New version vX.Y.Z available") and still runs the current one.
+3. To upgrade: **run `update`** (`update.sh`/`.bat`). It records the current version →
+   checks out the newest tag → `npm install` → runs `npm test`. **Tests fail → it rolls
+   back immediately.** Pass → the new version is live.
+4. A release that passed tests but misbehaves in practice: **run `rollback`** → return to the
+   previous version (stored in `.proofmail-prev-version`). Or any version:
    `git checkout v1.0.0 && npm install`.
 
-**Phía người quản lý tool (phát hành một bản):**
+**To cut a release (tool maintainer):**
 
 ```bash
-# 1) Đảm bảo test xanh
-npm test
-# 2) Bump version trong package.json (semver: feature → minor, sửa lỗi → patch)
-# 3) Commit rồi gắn thẻ KHỚP version và push cả thẻ
-git commit -am "release: v1.1.0"
+npm test                                  # 1) tests green
+# 2) bump version in package.json (semver: feature → minor, fix → patch)
+git commit -am "release: v1.1.0"          # 3) commit, tag MATCHING the version, push both
 git tag v1.1.0
 git push && git push --tags
 ```
 
-Chỉ những commit **được gắn thẻ `v*`** mới tới tay nhân viên (qua `update`). Commit chưa
-gắn thẻ trên `main` không tự về máy ai → bạn push WIP thoải mái mà không ảnh hưởng sản xuất.
-Version đang chạy hiện ngay trên **banner** (`✻ PROOFMAIL  vX.Y.Z`) để biết máy nào ở bản nào.
+Only **`v*`-tagged** commits reach staff (via `update`). Untagged commits on `main` reach
+no one — push WIP freely. The running version shows on the **banner**
+(`✻ PROOFMAIL  vX.Y.Z`) so you can tell which machine is on which release.
 
-> **Lưu ý thẳng thắn về "bảo vệ code":** vì tool chạy trên máy nhân viên, **không thể** ngăn tuyệt đối việc đọc code (đóng gói .exe cũng trích xuất được, và Playwright/Chromium rất khó đóng gói kiểu đó). Điều này **không đáng lo**: logic ở đây không phải bí mật thương mại. Cái thật sự cần bảo vệ là **credential SMTP + danh sách NCC**, và chúng được bảo vệ bằng Lớp 1 & 2 ở trên.
->
-> **Khi nào cần bảo vệ tuyệt đối?** Khi đó hãy chuyển sang kiến trúc **web app nội bộ** (xem `BUSINESS-REQUIREMENT.md`): code chạy trên server công ty, nhân viên chỉ truy cập qua trình duyệt + đăng nhập, không bao giờ thấy code hay giữ credential. Phần lõi hiện tại tái dùng được nguyên vẹn.
+> **On "protecting the code":** since the tool runs on staff machines, reading the code
+> can't be fully prevented (even an `.exe` can be extracted). This is fine — the logic
+> isn't secret. What matters — **SMTP credentials + the seller list** — is covered by
+> layers 1 & 2. For true source protection, move to an **internal web app** (see
+> `BUSINESS-REQUIREMENT.md`): code runs on the company server, staff access via browser +
+> login, never seeing the code or holding credentials. The current core is reused as-is.

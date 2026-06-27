@@ -118,7 +118,7 @@ export interface CaptureConfig {
 }
 
 export interface TrackingConfig {
-  /** HMAC secret for the shop-URL identity token; '' = feature off (clean link). */
+  /** HMAC secret for the seller-identity token; '' = feature off (clean link). */
   tokenSecret: string;
   /** Query param the token rides in (default 'ref'). */
   tokenParam: string;
