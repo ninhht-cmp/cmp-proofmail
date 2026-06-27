@@ -21,20 +21,20 @@
 **Windows:** Bấm nút **Start**, gõ **PowerShell**, mở nó. Dán nguyên dòng này (chuột phải để dán) rồi Enter:
 
 ```powershell
-irm https://raw.githubusercontent.com/ninhht-cmp/proofmail/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/ninhht-cmp/cmp-proofmail/main/install.ps1 | iex
 ```
 
 **Mac:** Mở **Terminal**, dán dòng này rồi Enter:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ninhht-cmp/proofmail/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ninhht-cmp/cmp-proofmail/main/install.sh | bash
 ```
 
-Lệnh sẽ tự tải tool về thư mục **`proofmail`** (trong thư mục người dùng của bạn), cài thư viện (lần đầu **1–2 phút**, cần mạng), rồi **tạo file `.env`** và dừng lại để bạn điền cấu hình.
+Lệnh sẽ tự tải tool về thư mục **`cmp-proofmail`** (trong thư mục người dùng của bạn), cài thư viện (lần đầu **1–2 phút**, cần mạng), rồi **tạo file `.env`** và dừng lại để bạn điền cấu hình.
 
 ## Bước 3 — Điền thông tin gửi mail
 
-1. Mở thư mục **`proofmail`** vừa tạo, mở file **`.env`** (bằng **Notepad** / **TextEdit**).
+1. Mở thư mục **`cmp-proofmail`** vừa tạo, mở file **`.env`** (bằng **Notepad** / **TextEdit**).
 2. Tìm và điền 3 dòng theo thông tin quản lý gửi, rồi **Lưu**:
    ```
    SMTP_HOST=proXX.emailserver.vn        ← thay XX bằng số quản lý cấp
@@ -44,12 +44,12 @@ Lệnh sẽ tự tải tool về thư mục **`proofmail`** (trong thư mục ng
 
 ## Bước 4 — Chạy tool (và mọi lần sau)
 
-Mở thư mục **`proofmail`**, bấm đúp:
-- **Windows:** `start.bat` — nếu hiện cảnh báo xanh "Windows protected your PC" → bấm **More info → Run anyway**.
-- **Mac:** `start.command` — nếu bị chặn → **chuột phải vào file → Open → Open**.
+- **Windows:** bấm đúp icon **Proofmail** trên **Desktop** (cài đặt tự tạo sẵn; cũng có trong Start Menu khi gõ "Proofmail"). Lần đầu hiện cảnh báo xanh "Windows protected your PC" → bấm **More info → Run anyway**.
+  *(Không thấy icon? Mở thư mục `cmp-proofmail` và bấm đúp `start.bat`.)*
+- **Mac:** mở thư mục `cmp-proofmail`, bấm đúp `start.command` — nếu bị chặn → **chuột phải vào file → Open → Open**.
 
 Tool sẽ **tự tải bản mới nhất** rồi vào màn hình chọn danh sách. Làm theo hướng dẫn trên màn hình (xem thêm `HUONG-DAN-NHAN-VIEN.md`). ✅
-Từ giờ mỗi lần dùng **chỉ cần bấm đúp file đó** — không phải cài lại gì nữa.
+Từ giờ mỗi lần dùng **chỉ cần bấm vào icon đó** — không phải cài lại gì nữa.
 
 ---
 
@@ -63,4 +63,4 @@ Từ giờ mỗi lần dùng **chỉ cần bấm đúp file đó** — không ph
 | Báo lỗi đăng nhập khi gửi mail | Kiểm tra lại **`SMTP_PASS`** trong `.env` (đúng mật khẩu hộp thư `seller@comacpro.net`). Không có khoảng trắng thừa. |
 | Bí quá | Chụp màn hình chỗ lỗi → gửi quản lý. |
 
-> 💡 **Không bao giờ** sửa các file trong thư mục `proofmail` (trừ file `.env` của bạn) — để việc tự cập nhật luôn chạy trơn tru.
+> 💡 **Không bao giờ** sửa các file trong thư mục `cmp-proofmail` (trừ file `.env` của bạn) — để việc tự cập nhật luôn chạy trơn tru.

@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Cài Proofmail bằng MỘT lệnh (Mac / Linux / Git Bash trên Windows).
 #
-#   curl -fsSL https://raw.githubusercontent.com/ninhht-cmp/proofmail/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/ninhht-cmp/cmp-proofmail/main/install.sh | bash
 #
 # Việc nó làm: clone repo (giữ .git → launcher tự cập nhật về sau) rồi chạy
 # launcher để cài thư viện + tạo .env. KHÔNG chứa bí mật nào.
 set -e
 
-REPO_URL="https://github.com/ninhht-cmp/proofmail.git"
-DEST="${PROOFMAIL_DIR:-$HOME/proofmail}"
+REPO_URL="https://github.com/ninhht-cmp/cmp-proofmail.git"
+DEST="${PROOFMAIL_DIR:-$HOME/cmp-proofmail}"
 
 if ! command -v git >/dev/null 2>&1; then
   echo "❌ Chưa cài Git. Cài tại https://git-scm.com (để mặc định) rồi chạy lại lệnh này."

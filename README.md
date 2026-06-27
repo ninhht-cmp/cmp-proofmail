@@ -206,15 +206,16 @@ per-platform build.
 
 ```powershell
 # Windows (PowerShell)
-irm https://raw.githubusercontent.com/ninhht-cmp/proofmail/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/ninhht-cmp/cmp-proofmail/main/install.ps1 | iex
 ```
 ```bash
 # macOS / Linux (Terminal)
-curl -fsSL https://raw.githubusercontent.com/ninhht-cmp/proofmail/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ninhht-cmp/cmp-proofmail/main/install.sh | bash
 ```
 
-The installer `git clone`s the repo to `~/proofmail` (keeps `.git` for later updates) and
-runs the launcher to install deps + create `.env`. A clone preserves tracked files per
+The installer `git clone`s the repo to `~/cmp-proofmail` (keeps `.git` for later updates),
+creates **Desktop + Start Menu shortcuts** ("Proofmail" → `start.bat`) so staff launch it like
+an app, and runs the launcher to install deps + create `.env`. A clone preserves tracked files per
 `.gitattributes`, so EOL is always correct (`start.bat`=CRLF, `start.sh`=LF) and `.env`,
 `node_modules`, and real seller data (all untracked) never come along. Only requirement on
 the user machine: **Git**.
@@ -274,7 +275,7 @@ drags down a working one.
 
 **On a staff machine:**
 
-1. Install **Git** once + run the installer → `git clone` to `~/proofmail`.
+1. Install **Git** once + run the installer → `git clone` to `~/cmp-proofmail`.
 2. **Run `start`** as usual — it runs the pinned release. If a newer release exists, the
    launcher prints one line ("New version vX.Y.Z available") and still runs the current one.
 3. To upgrade: **run `update`** (`update.sh`/`.bat`). It records the current version →
