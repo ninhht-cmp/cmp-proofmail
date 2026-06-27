@@ -1,5 +1,5 @@
 {
-  "name": "cmp-proofmail-tool",
+  "name": "cmp-proofmail",
   "version": "1.0.0",
   "description": "CMP Proofmail | A tool for sending personalized bulk emails to sellers, accompanied by proof of store (real photos). It features a Q&A wizard for users and command flags for developers. The tool automatically captures store images, renders templates, and sends emails with throttle/retry/checkpoint mechanisms.",
   "bin": {

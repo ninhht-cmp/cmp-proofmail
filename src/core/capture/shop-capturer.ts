@@ -1,5 +1,5 @@
-// Screenshots storefronts via Playwright. Stays silent — progress is emitted
-// through onProgress so the CLI/web layer decides how to display it.
+// Screenshots seller storefronts via Playwright. Stays silent — progress is
+// emitted through onProgress so the CLI/web layer decides how to display it.
 import pLimit from 'p-limit';
 import type { Browser } from 'playwright';
 import { launchBrowser } from '../../adapters/browser.js';
@@ -12,7 +12,7 @@ const LAZYLOAD_SCROLL_PX = 400; // nudge to trigger lazy-loaded product images
 const SCROLL_SETTLE_MS = 800;
 const TOP_SETTLE_MS = 250; // let the page repaint after scrolling back to top
 
-async function captureStore(
+async function screenshotShop(
   browser: Browser,
   seller: Seller,
   { capture, skipExisting }: { capture: CaptureConfig; skipExisting?: boolean },
@@ -57,15 +57,15 @@ async function captureStore(
   }
 }
 
-// Capture ONE seller on a browser the caller owns (manual flow reuses one
-// browser across the session; the cache makes re-picks instant).
-export async function captureSeller(
+// Capture ONE shop on a browser the caller owns (manual flow reuses one browser
+// across the session; the cache makes re-picks instant).
+export async function captureShop(
   browser: Browser,
   seller: Seller,
   { config, skipExisting = true }: { config: Config; skipExisting?: boolean },
 ): Promise<CaptureResult> {
   ensureDirs();
-  return captureStore(browser, seller, { capture: config.capture, skipExisting });
+  return screenshotShop(browser, seller, { capture: config.capture, skipExisting });
 }
 
 type CaptureProgress = (e: {
@@ -75,7 +75,7 @@ type CaptureProgress = (e: {
   result: CaptureResult;
 }) => void;
 
-export async function captureStores(
+export async function captureShops(
   sellers: Seller[],
   {
     config,
@@ -91,7 +91,7 @@ export async function captureStores(
     return await Promise.all(
       sellers.map((seller) =>
         limit(async () => {
-          const result = await captureStore(browser, seller, {
+          const result = await screenshotShop(browser, seller, {
             capture: config.capture,
             skipExisting,
           });

@@ -1,101 +1,140 @@
-# CLAUDE.md — quy ước dự án Proofmail
+# CLAUDE.md — Proofmail project conventions
 
-Hướng dẫn cho người (và AI agent) sửa code. Mục tiêu: giữ codebase nhất quán,
-mượt, không tái phát các lỗi đã từng gặp.
+Guidance for humans (and AI agents) editing this code. Goal: keep the codebase
+consistent and predictable, and stop past bugs from recurring.
 
-## Ngôn ngữ nghiệp vụ (ubiquitous language) — QUAN TRỌNG
+## Language policy
 
-Một khái niệm = **một từ trong code**. Người nhận mail được gọi là **`seller`**.
+The **engineering surface is English**; the **product surface is Vietnamese**.
 
-| Ngữ cảnh | Dùng từ |
+| Surface | Language |
 |---|---|
-| Code / biến / hàm / file / cột dữ liệu / biến template | **`seller`**, `seller_name` |
-| Tài liệu nghiệp vụ tiếng Việt (BUSINESS-REQUIREMENT, README cho user) | "nhà cung cấp" / "NCC" — **là cùng khái niệm `seller`** |
+| Code, identifiers, code comments, dev docs (`CLAUDE.md`, `README.md`, `experimental/README.md`) | English |
+| Runtime end-user output (CLI prompts, errors, UI) | Vietnamese, plain wording — no technical error codes |
+| Operator & stakeholder guides (`HUONG-DAN-*.md`, `BUSINESS-REQUIREMENT.md`) | Vietnamese — their readers are the Vietnamese sales/ops team |
 
-⛔ **Không** dùng `supplier`, `supplier_name`, `ncc`, `vendor` trong code/template/env.
-Đây không phải chuyện thẩm mỹ: một tiêu đề mail `{{supplier_name}}` từng render
-TRỐNG vì renderer chỉ cấp `seller_name` → mọi mail gửi đi thiếu tên người nhận.
+## Ubiquitous language — IMPORTANT
 
-Biến template được phép, theo từng phần:
-- **Subject**: mặc định lấy từ `MAIL_SUBJECT` (.env); có thể đặt riêng theo từng
-  mẫu bằng file `templates/<tên>.subject.hbs` (có thì override, không thì dùng
-  `MAIL_SUBJECT`) — xem `subjectTemplateFor`. Dù nguồn nào cũng chỉ dùng được
-  `{{seller_name}}`, `{{from_name}}`. Nguồn sự thật biến: `SUBJECT_VARS` trong
-  `src/core/render/template.ts`. Sai tên biến → CLI cảnh báo lúc khởi động
-  (`unknownSubjectVars`, kiểm trên subject HIỆU LỰC của mẫu đang chọn).
+One concept = **one word in code**. The mail recipient is always **`seller`**.
+
+⛔ Never use `supplier`, `supplier_name`, `ncc`, `vendor` in code/templates/env.
+This isn't cosmetic: a subject of `{{supplier_name}}` once rendered EMPTY because the
+renderer only supplies `seller_name` → every mail shipped without a recipient name.
+(Vietnamese business docs say "nhà cung cấp / NCC" — that is the *same* concept as
+`seller`, just the stakeholder-facing word.)
+
+Template variables, by part — source of truth is the code, not this list:
+- **Subject**: defaults to `MAIL_SUBJECT` (.env); a design may override via
+  `templates/<name>.subject.hbs`. Either way only `{{seller_name}}`, `{{from_name}}`
+  are valid (`SUBJECT_VARS` in `src/core/render/template.ts`). A wrong name warns at
+  startup (`unknownSubjectVars`, checked against the effective subject).
 - **HTML** (`templates/*.hbs`): `{{seller_name}}`, `{{shop_url}}`, `{{shop_image_src}}`, `{{assets.*}}`.
 - **Text** (`templates/*.txt.hbs`): `{{seller_name}}`, `{{shop_url}}`, `{{from_name}}`, `{{contact}}`.
 
-## Kiến trúc — ports & adapters
+## Architecture — ports & adapters
 
 ```
-cli/      → interface (terminal). KHÔNG đặt logic nghiệp vụ ở đây.
-core/     → lõi thuần: không terminal, không đọc env trực tiếp, không global.
-            Nhận config + store qua THAM SỐ (dependency injection).
-adapters/ → rìa I/O: nodemailer, Playwright, fs, Google Sheet. Cô lập thư viện ngoài.
-config/   → đọc .env → object config (loadConfig là factory, không singleton).
-lib/      → util thuần, không domain.
+cli/      → terminal interface. NO business logic here.
+core/     → pure core: no terminal, no direct env reads, no globals.
+            Receives config + stores by ARGUMENT (dependency injection).
+adapters/ → I/O edge: nodemailer, Playwright, fs, Google Sheet. Isolates third-party libs.
+config/   → reads .env → config object (loadConfig is a factory, not a singleton).
+lib/      → pure utilities, no domain.
 ```
 
-Quy tắc vàng: **core không được import từ `cli/`**, không đọc `process.env`, không
-`console.log`. Tiến trình báo ra ngoài qua callback `onProgress`. Nhờ vậy V2 (web)
-bọc lại core thành job mà không sửa lõi.
+Golden rule: **`core/` must not import from `cli/`**, must not read `process.env`, must
+not `console.log`. Progress leaves the core via the `onProgress` callback. This is what
+lets V2 (web) wrap the core as a job without touching it.
 
-## TypeScript & build (QUAN TRỌNG)
-- Mã nguồn là **TypeScript** trong `src/` (`.ts`). `tsc` biên dịch ra `dist/`
-  (gitignore); **`node` luôn chạy `dist/`**, KHÔNG ts-node/tsx, KHÔNG transpile lúc chạy.
-- Import specifier giữ đuôi **`.js`** ngay cả trong file `.ts` (NodeNext) — tsc tự
-  resolve sang `.ts` và emit `.js`. Đừng đổi sang `.ts` trong import.
-- `tsconfig.json`: `strict` BẬT nhưng `noImplicitAny` TẮT (gradual: tham số chưa chú
-  thích = `any`; cái đã chú thích bị kiểm chặt). `noUnusedLocals` bắt import thừa.
-- Kiểu domain dùng chung ở **`src/core/types.ts`** (`Seller`/`Config`/`CampaignResult`…)
-  — thêm/sửa shape ở ĐÂY, không rải khắp nơi.
-- `typescript` + `@types/*` là **dependencies** (build chạy trên máy người dùng);
-  chỉ `prettier` là devDependency. Lint = `tsc` + Prettier (KHÔNG dùng ESLint).
-- Launcher tự `npm run build` (incremental) rồi chạy `dist/`. Lỗi kiểu = build fail
-  = tool báo rõ, KHÔNG chạy sai.
+## Naming
 
-## Quy ước đặt tên
-- File/folder: **kebab-case** (`campaign-sender.ts`, `seller-validator.ts`).
-- Hàm: động từ rõ nghĩa (`captureStores`, `recordSent`, `loadSheetToFile`).
-- Thông báo cho người dùng cuối: **tiếng Việt, ngôn ngữ đời thường**, không mã lỗi kỹ thuật.
+- Files/folders: **kebab-case** (`campaign-sender.ts`, `seller-validator.ts`).
+- Functions: clear verbs (`captureShops`, `recordSent`, `loadSheetToFile`).
+- Name by **function / the thing acted on**, not the input type: `captureShops` takes
+  `Seller[]` but is named for *what it captures* = shops.
+- **Ubiquitous language pins ONE concept** ("the recipient = `seller`"); it does NOT
+  mean everything is named `seller`. Keep shared mechanics **generic** in `lib/`
+  (`signToken`/`readToken`) so they extend; use a domain word only where it truly is
+  that concept (`sellerSlug`, `shopUrlFor`).
 
-## Cấu hình & bí mật
-- Mọi giá trị vận hành đọc từ `.env` (xem `.env.example` — nguồn sự thật để copy).
-- **Không** hardcode credential. `.env` không commit (`.gitignore`) → không vào bản phân phối (cài qua `git clone`, file chưa track không bao giờ theo về).
-- Thêm config mới: khai báo trong `loadConfig` (kèm default an toàn) + ghi vào `.env.example`.
+## Comments
 
-## Deliverability (đang dùng Gmail-SMTP)
-- Mỗi mail có header `List-Unsubscribe` tự sinh từ `MAIL_FROM_EMAIL` (mailto) để
-  người nhận opt-out thay vì báo spam. One-click https + xử lý tự động là việc của
-  ESP/V2 (xem `experimental/`).
-- Cảnh báo nghiệp vụ: gửi >500/ngày qua Gmail dễ bị khoá. Gửi lớn → đổi sang
-  Amazon SES/SendGrid (chỉ sửa `SMTP_*` trong .env) + cấu hình SPF/DKIM/DMARC cho
-  `comacpro.net`, và bật lại Tầng B trong `experimental/`.
+Comments explain **WHY, not WHAT**. The code already states what it does; a comment
+earns its place only by capturing intent, a non-obvious constraint, a gotcha, or the
+reasoning behind a decision. Don't restate the next line or narrate the obvious —
+prefer one sharp comment over three redundant ones. Comment the surprising, not the
+self-evident; match the density of the surrounding code.
+
+## TypeScript & build — IMPORTANT
+
+- Source is **TypeScript** in `src/` (`.ts`). `tsc` compiles to `dist/` (gitignored);
+  **`node` always runs `dist/`** — no ts-node/tsx, no transpile at runtime.
+- Import specifiers keep the **`.js`** suffix even in `.ts` files (NodeNext) — tsc
+  resolves to `.ts` and emits `.js`. Don't switch them to `.ts`.
+- `tsconfig.json`: `strict` ON but `noImplicitAny` OFF (gradual: an unannotated param
+  is `any`; an annotated one is checked strictly). `noUnusedLocals` catches dead imports.
+- Shared domain types live in **`src/core/types.ts`** (`Seller`/`Config`/`CampaignResult`…)
+  — add/change shapes HERE, not scattered around.
+- `typescript` + `@types/*` are **dependencies** (the build runs on the user's machine);
+  only `prettier` is a devDependency. Lint = `tsc` + Prettier (NO ESLint).
+- The launcher runs `npm run build` (incremental) then `dist/`. A type error = build
+  failure = the tool reports it clearly instead of running wrong.
+
+## Config & secrets
+
+- Every operational value comes from `.env` (see `.env.example` — the source to copy).
+- **Never** hardcode credentials. `.env` is gitignored → never ships (install is via
+  `git clone`; untracked files never come along).
+- New config: declare it in `loadConfig` (with a safe default) + add it to `.env.example`.
+
+## Deliverability (currently Gmail SMTP)
+
+- Every mail carries a `List-Unsubscribe` header derived from `MAIL_FROM_EMAIL` (mailto)
+  so recipients opt out instead of reporting spam. One-click https + auto-handling is an
+  ESP/V2 concern (see `experimental/`).
+- Business caveat: >500/day over Gmail risks a lock. For volume, switch to Amazon
+  SES/SendGrid (change only `SMTP_*` in .env) + set up SPF/DKIM/DMARC for `comacpro.net`,
+  and re-enable Tier B in `experimental/`.
+
+## Seller identity token on the link (click tracking — OFF BY DEFAULT)
+
+At send time the CTA `shop_url` can carry a signed identity token so the receiver knows
+which seller a click belongs to (it follows the link, not the visitor's cookie/user-id).
+- **Minted in the send layer**: `shopUrlFor(seller, config.tracking)` inside `buildMessage`
+  (`campaign-sender.ts`) — extracts `sellerSlug` from `/seller/<slug>/` and signs it with
+  `signToken` (`lib/signed-token.ts`, generic). The receiver resolves it with `readToken`.
+- **Off by default**: with no `SHOP_URL_TOKEN_SECRET` set, links ship unchanged. The token
+  goes on the CTA link ONLY; screenshot capture still uses the raw `shop_url`.
+- Token *consumption* (BE `trackExploreClick` + FE) lives outside this tool; enable it once
+  the BE is ready and both sides share one secret.
 
 ## `experimental/`
-Code Tầng B (ESP bounce/complaint: webhook + ingest + normalizer) đã tách khỏi
-lõi vì CHƯA nằm trong luồng gửi hiện tại. Đừng để `src/` import từ `experimental/`.
-Khi chuyển sang ESP thật thì kéo vào lõi. Xem `experimental/README.md`.
 
-## Test
-- `npm test` — `pretest` tự `npm run build`, rồi chạy test lõi (`test/*.test.js`,
-  import từ `dist/`). Phải xanh trước khi commit.
-- `npm run test:experimental` — test Tầng B (cũng tự build trước).
-- Sửa hành vi → cập nhật / thêm test tương ứng (đặc biệt: store, validator, render, suppression).
+Tier B (ESP bounce/complaint: webhook + ingest + normalizer) is split out because it is
+NOT yet in the live send flow. Don't let `src/` import from `experimental/`. Pull it into
+the core when moving to a real ESP. See `experimental/README.md`.
+
+## Tests
+
+- `npm test` — `pretest` builds, then runs the core tests (`test/*.test.js`, importing
+  from `dist/`). Must be green before committing.
+- `npm run test:experimental` — Tier B tests (also builds first).
+- Change behaviour → update/add the matching test (especially: store, validator, render,
+  suppression, signed-token).
 
 ## Package manager
-Dùng **npm** (đã khoá qua `packageManager` trong package.json). Commit `package-lock.json`.
-Không trộn pnpm/yarn.
 
-## Phát hành & version
+Use **npm** (pinned via `packageManager` in package.json). Commit `package-lock.json`.
+Don't mix pnpm/yarn.
 
-Đơn vị phát hành là **git tag `vX.Y.Z`** (semver), KHÔNG phải mỗi commit của `main`.
-Máy người dùng ghim vào một tag; `update.sh`/`.bat` mới chuyển tag (có chạy `npm test`,
-lỗi thì tự rollback). Vì vậy:
-- `main` có thể chứa commit WIP — chúng KHÔNG tới máy ai cho tới khi được gắn thẻ.
-- Phát hành: test xanh → bump `version` trong `package.json` (feature=minor, fix=patch,
-  breaking=major) → `git tag vX.Y.Z` **khớp** version → push kèm `--tags`.
-- `VERSION` (đọc từ `package.json` trong `app-config.ts`) hiện trên banner → tag và
-  `package.json` phải luôn khớp.
-- `start.*` chỉ BÁO khi có tag mới (không tự `git pull`). Đừng thêm lại auto-pull.
+## Releases & versioning
+
+The unit of release is a **git tag `vX.Y.Z`** (semver), NOT every commit on `main`. Each
+machine pins to a tag; `update.sh`/`.bat` moves the tag (runs `npm test`, auto-rolls back
+on failure). Therefore:
+- `main` may hold WIP commits — they reach no one until tagged.
+- To release: tests green → bump `version` in `package.json` (feature=minor, fix=patch,
+  breaking=major) → `git tag vX.Y.Z` **matching** the version → push with `--tags`.
+- `VERSION` (read from `package.json` in `app-config.ts`) shows on the banner → the tag and
+  `package.json` must always match.
+- `start.*` only ANNOUNCES a new tag (no auto `git pull`). Don't re-add auto-pull.

@@ -12,6 +12,7 @@ import {
   brandAssetSrcs,
 } from '../../adapters/storage.js';
 import { buildHtml, buildSubject, buildText, subjectTemplateFor } from '../render/template.js';
+import { shopUrlFor } from '../render/shop-url.js';
 import type { Seller, CaptureResult, Config, CampaignResult } from '../types.js';
 
 // Inline brand-chrome attachments, built from the same brandAssets the template
@@ -83,15 +84,20 @@ export function buildMessage(
   seller: Seller,
   { config, overrideTo }: { config: Config; overrideTo?: string },
 ) {
+  // Tokenize ONCE here so the HTML and text parts carry the same CTA link (and the
+  // screenshot capture, which uses seller.shop_url directly, stays un-tokenized).
+  const shopUrl = shopUrlFor(seller, config.tracking);
   const html = buildHtml(seller, {
     imageSrc: 'cid:shopshot',
     assets: brandAssetSrcs(),
     template: config.mail.template,
+    shopUrl,
   });
   const text = buildText(seller, {
     fromName: config.mail.fromName,
     contact: config.mail.fromEmail,
     template: config.mail.template,
+    shopUrl,
   });
   const attachments = [
     ...BRAND_ATTACHMENTS,

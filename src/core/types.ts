@@ -117,6 +117,13 @@ export interface CaptureConfig {
   quality: number;
 }
 
+export interface TrackingConfig {
+  /** HMAC secret for the seller-identity token; '' = feature off (clean link). */
+  tokenSecret: string;
+  /** Query param the token rides in (default 'ref'). */
+  tokenParam: string;
+}
+
 /** The full operational config (factory output of loadConfig). */
 export interface Config {
   smtp: SmtpConfig;
@@ -124,4 +131,5 @@ export interface Config {
   imap: ImapConfig;
   throttle: ThrottleConfig;
   capture: CaptureConfig;
+  tracking: TrackingConfig;
 }

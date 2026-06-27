@@ -83,5 +83,12 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       emailWidth: Number(env.SHOT_EMAIL_WIDTH || 720),
       quality: Number(env.SHOT_QUALITY || 80),
     },
+    // Signed seller-identity token appended to the CTA shop_url at send time. No
+    // secret set → feature off, links ship clean (today's behaviour). The receiver
+    // resolves the seller with readToken(token, SHOP_URL_TOKEN_SECRET).
+    tracking: {
+      tokenSecret: env.SHOP_URL_TOKEN_SECRET || '',
+      tokenParam: env.SHOP_URL_TOKEN_PARAM || 'ref',
+    },
   };
 }

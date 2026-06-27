@@ -8,7 +8,7 @@ import { pathToFileURL } from 'node:url';
 import { loadConfig, ROOT, VERSION } from '../config/app-config.js';
 import { checkEnv } from '../config/env-check.js';
 import { loadSellers } from '../core/sellers/seller-loader.js';
-import { captureStores } from '../core/capture/store-capturer.js';
+import { captureShops } from '../core/capture/shop-capturer.js';
 import { sendCampaign, sendOne } from '../core/mailer/campaign-sender.js';
 import { createTransport } from '../adapters/smtp-transport.js';
 import {
@@ -290,7 +290,7 @@ async function main(): Promise<void> {
 
   // The screenshot is embedded inline in each email (no separate attachment).
   ui.step('1', 'Chuẩn bị ảnh gian hàng');
-  const shots = await captureStores(validation.valid, {
+  const shots = await captureShops(validation.valid, {
     config,
     skipExisting: true,
     onProgress: makeCaptureReporter(),
