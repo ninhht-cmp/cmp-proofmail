@@ -28,7 +28,7 @@ Template variables, by part — source of truth is the code, not this list:
   `templates/<name>.subject.hbs`. Either way only `{{seller_name}}`, `{{from_name}}`
   are valid (`SUBJECT_VARS` in `src/core/render/template.ts`). A wrong name warns at
   startup (`unknownSubjectVars`, checked against the effective subject).
-- **HTML** (`templates/*.hbs`): `{{seller_name}}`, `{{shop_url}}`, `{{shop_image_src}}`, `{{assets.*}}`.
+- **HTML** (`templates/*.hbs`): `{{seller_name}}`, `{{shop_url}}`, `{{shop_image_src}}`, `{{assets.*}}`, `{{unsubscribe}}` (opt-out mailto; wrap usage in `{{#if unsubscribe}}`).
 - **Text** (`templates/*.txt.hbs`): `{{seller_name}}`, `{{shop_url}}`, `{{from_name}}`, `{{contact}}`.
 
 ## Architecture — ports & adapters
@@ -89,24 +89,33 @@ self-evident; match the density of the surrounding code.
 
 ## Deliverability (currently Gmail SMTP)
 
-- Every mail carries a `List-Unsubscribe` header derived from `MAIL_FROM_EMAIL` (mailto)
-  so recipients opt out instead of reporting spam. One-click https + auto-handling is an
-  ESP/V2 concern (see `experimental/`).
+- Every mail carries a `List-Unsubscribe` header + a visible HTML footer link, both
+  `mailto:MAIL_FROM_EMAIL`, so recipients opt out instead of reporting spam. The reply is
+  honored MANUALLY via `npm run suppress -- <email>` (or the suppress launcher), which adds
+  the address to the suppression list. One-click https + auto-handling is an ESP/V2 concern.
 - Business caveat: >500/day over Gmail risks a lock. For volume, switch to Amazon
   SES/SendGrid (change only `SMTP_*` in .env) + set up SPF/DKIM/DMARC for `comacpro.net`,
   and re-enable Tier B in `experimental/`.
 
-## Seller identity token on the link (click tracking — OFF BY DEFAULT)
+## CTA link markers — click tracking
 
-At send time the CTA `shop_url` can carry a signed identity token so the receiver knows
-which seller a click belongs to (it follows the link, not the visitor's cookie/user-id).
-- **Minted in the send layer**: `shopUrlFor(seller, config.tracking)` inside `buildMessage`
-  (`campaign-sender.ts`) — extracts `sellerSlug` from `/seller/<slug>/` and signs it with
-  `signToken` (`lib/signed-token.ts`, generic). The receiver resolves it with `readToken`.
-- **Off by default**: with no `SHOP_URL_TOKEN_SECRET` set, links ship unchanged. The token
-  goes on the CTA link ONLY; screenshot capture still uses the raw `shop_url`.
-- Token *consumption* (BE `trackExploreClick` + FE) lives outside this tool; enable it once
-  the BE is ready and both sides share one secret.
+`shopUrlFor` (`core/render/shop-url.ts`), called once in `buildMessage`
+(`campaign-sender.ts`), can stamp two INDEPENDENT markers onto the CTA `shop_url`.
+Both are CTA-link only — screenshot capture always uses the raw `shop_url`.
+
+**1. UTM marker — always on for real sends (interim tracking).** Adds
+`utm_source=email` + `utm_campaign=<mail template>` so the marketplace can tell an email
+click from an organic store visit (the FE fires `trackExploreClick` only when the marker
+is present). `utm_source` is a constant (the tool only sends email — no env to tune); the
+marker is applied whenever `shopUrlFor` gets a `utmCampaign`, which `buildMessage` always
+passes (= the template name).
+
+**2. Signed seller-identity token — OFF by default.** When `SHOP_URL_TOKEN_SECRET` is
+set, appends `?ref=<token>`: `sellerSlug` (from `/seller/<slug>/`) signed with `signToken`
+(`lib/signed-token.ts`, generic), resolved by the receiver via `readToken`. It makes a
+click attribute to the seller who owns the link (not the logged-in account) and is
+forgery-proof. Consumption (BE `trackExploreClick` v2 + FE) lives outside this tool;
+enable once the BE is ready and both sides share one secret.
 
 ## `experimental/`
 

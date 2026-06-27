@@ -5,8 +5,15 @@ import { listTemplates } from '../adapters/storage.js';
 import { ui, c } from './ui.js';
 
 // The default design keeps the legacy un-suffixed campaign id, so sent-history
-// from before per-design scoping survives; other designs get a suffixed store.
-export const DEFAULT_TEMPLATE = 'touch';
+// survives per-design scoping (and the rename); other designs get a suffixed store.
+export const DEFAULT_TEMPLATE = 'intro';
+
+// Vietnamese one-liner shown (dimmed, under the focused row) so non-technical staff
+// pick the right design. Keyed by name; a dropped-in design with no entry shows none.
+const TEMPLATE_LABELS: Record<string, string> = {
+  intro: 'Email giới thiệu — gửi cho người bán lần đầu',
+  followup: 'Email nhắc lại — gửi cho người chưa phản hồi',
+};
 
 // Campaign store id for a (list, design) pair — shared by all flows so a design
 // can't be tracked under two ids.
@@ -16,7 +23,7 @@ export function campaignIdFor(fileBase: string, template: string): string {
 
 // With 0–1 designs there's nothing to choose — keep `current`, never block the run.
 export async function pickTemplate({
-  current = 'touch',
+  current = 'intro',
 }: { current?: string } = {}): Promise<string> {
   const templates = listTemplates();
   if (templates.length <= 1) {
@@ -29,9 +36,12 @@ export async function pickTemplate({
   return select({
     message: 'Chọn mẫu mail cho phiên này:',
     default: templates.includes(current) ? current : templates[0],
+    // List stays tidy (just the name + a default marker); the Vietnamese purpose
+    // shows as inquirer's dimmed description line under the focused row.
     choices: templates.map((name) => ({
       name: name === current ? `${name} ${c.dim('(mặc định)')}` : name,
       value: name,
+      description: TEMPLATE_LABELS[name],
     })),
   });
 }

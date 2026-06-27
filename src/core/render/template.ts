@@ -1,5 +1,5 @@
 // Renders the clickable HTML email from a Handlebars template. Templates are
-// selected by name (default 'touch' = templates/touch.hbs); add a design by
+// selected by name (default 'intro' = templates/intro.hbs); add a design by
 // dropping a new templates/<name>.hbs — no code change.
 import Handlebars from 'handlebars';
 import { paths, readText, fileExists, fileMtimeMs } from '../../adapters/storage.js';
@@ -27,7 +27,8 @@ function context(
     imageSrc,
     assets,
     shopUrl,
-  }: { imageSrc: string; assets?: Record<string, string>; shopUrl?: string },
+    unsubscribe,
+  }: { imageSrc: string; assets?: Record<string, string>; shopUrl?: string; unsubscribe?: string },
 ) {
   return {
     seller_name: seller.seller_name,
@@ -37,6 +38,8 @@ function context(
     shop_url: shopUrl ?? seller.shop_url,
     shop_image_src: imageSrc,
     assets: assets || {}, // { header, services, advantages, footer } image srcs
+    // Opt-out mailto for the footer line; '' → the template hides the link.
+    unsubscribe: unsubscribe || '',
   };
 }
 
@@ -45,11 +48,18 @@ export function buildHtml(
   {
     imageSrc,
     assets = {},
-    template = 'touch',
+    template = 'intro',
     shopUrl,
-  }: { imageSrc: string; assets?: Record<string, string>; template?: string; shopUrl?: string },
+    unsubscribe,
+  }: {
+    imageSrc: string;
+    assets?: Record<string, string>;
+    template?: string;
+    shopUrl?: string;
+    unsubscribe?: string;
+  },
 ): string {
-  return getTemplate(template)(context(seller, { imageSrc, assets, shopUrl }));
+  return getTemplate(template)(context(seller, { imageSrc, assets, shopUrl, unsubscribe }));
 }
 
 // Plain-text part (templates/<name>.txt.hbs). This generic body is the fallback
@@ -68,13 +78,17 @@ To stop receiving these emails, reply with "unsubscribe".`;
 const textCache = new Map<string, { compiled: Compiled; mtime: number }>();
 let defaultTextCompiled: Compiled | null = null;
 
+// noEscape: this is the PLAIN-TEXT part — HTML-escaping has no place here. Without
+// it a CTA link with query params (?utm_source=email&utm_campaign=intro, or ?ref=)
+// would render as ...&amp;...&#x3D;..., a broken URL in a text client.
 function getTextTemplate(name: string): Compiled {
   const file = paths.textTemplate(name);
-  if (!fileExists(file)) return (defaultTextCompiled ??= Handlebars.compile(DEFAULT_TEXT));
+  if (!fileExists(file))
+    return (defaultTextCompiled ??= Handlebars.compile(DEFAULT_TEXT, { noEscape: true }));
   const mtime = fileMtimeMs(file);
   const hit = textCache.get(name);
   if (hit && hit.mtime === mtime) return hit.compiled;
-  const compiled = Handlebars.compile(readText(file));
+  const compiled = Handlebars.compile(readText(file), { noEscape: true });
   textCache.set(name, { compiled, mtime });
   return compiled;
 }
@@ -85,7 +99,7 @@ export function buildText(
   {
     fromName,
     contact = '',
-    template = 'touch',
+    template = 'intro',
     shopUrl,
   }: { fromName: string; contact?: string; template?: string; shopUrl?: string },
 ): string {

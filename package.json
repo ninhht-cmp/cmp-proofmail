@@ -1,6 +1,6 @@
 {
   "name": "cmp-proofmail",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "CMP Proofmail | A tool for sending personalized bulk emails to sellers, accompanied by proof of store (real photos). It features a Q&A wizard for users and command flags for developers. The tool automatically captures store images, renders templates, and sends emails with throttle/retry/checkpoint mechanisms.",
   "bin": {
     "proofmail": "dist/cli/main.js"
@@ -16,6 +16,9 @@
     "dry": "node dist/cli/main.js --auto --dry",
     "prescreenshot": "npm run build",
     "screenshot": "node scripts/screenshot.js",
+    "clean": "node scripts/clean.js",
+    "presuppress": "npm run build",
+    "suppress": "node scripts/suppress.js",
     "format": "prettier --write \"**/*.{ts,js,json}\"",
     "format:check": "prettier --check \"**/*.{ts,js,json}\"",
     "pretest": "npm run build",

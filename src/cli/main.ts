@@ -327,7 +327,7 @@ async function main(): Promise<void> {
         ui.ok(`Đã gửi bản thử tới ${testTo} (dùng dữ liệu người bán "${sample.seller_name}").`);
         const looksGood = await confirm({ message: 'Bạn đã kiểm tra và thấy ổn?', default: true });
         if (!looksGood) {
-          ui.dim('Đã dừng. Hãy chỉnh template (templates/touch.hbs) rồi chạy lại.');
+          ui.dim('Đã dừng. Hãy chỉnh template (templates/intro.hbs) rồi chạy lại.');
           process.exit(0);
         }
       } catch (e) {
@@ -350,7 +350,7 @@ async function main(): Promise<void> {
   }
 
   // Campaign id = (file, design) so a re-run resumes and 'followup' is tracked
-  // separately from 'touch' — same rule as the manual flow.
+  // separately from 'intro' — same rule as the manual flow.
   const campaignId = campaignIdFor(basename(file).replace(/\.[^.]+$/, ''), config.mail.template);
   const store = createCampaignStore(campaignId);
   ui.step('2', dryRun ? 'Chạy thử (không gửi thật)' : 'Đang gửi mail');

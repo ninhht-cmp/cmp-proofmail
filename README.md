@@ -109,17 +109,21 @@ the core**.
 start.bat / start.sh                ← double-click entry point (runs the pinned release)
 update.bat / update.sh              ← update to a new release (runs tests, auto-rollback on failure)
 rollback.bat / rollback.sh          ← return to the previous release
+clean.bat / clean.sh                ← reclaim disk: delete screenshots + sheet cache (keeps send history & suppression)
+suppress.bat / suppress.sh          ← add an email to the do-not-send list (honor an unsubscribe request)
 data/                               ← drop seller lists here
-templates/touch.hbs                 ← default HTML design (one source for email + image)
-templates/touch.txt.hbs             ← plain-text twin (same data, never drifts)
-templates/followup.hbs              ← follow-up design (sent after 'touch' to the same seller)
+templates/intro.hbs                 ← default HTML design (one source for email + image)
+templates/intro.txt.hbs             ← plain-text twin (same data, never drifts)
+templates/followup.hbs              ← follow-up design (sent after 'intro' to the same seller)
 templates/followup.subject.hbs      ← optional per-design subject (absent → MAIL_SUBJECT)
                                       Add a design: drop templates/<name>.hbs (+ .txt.hbs, + .subject.hbs);
                                       pick it in the CLI (or MAIL_TEMPLATE=<name> / --template <name>)
 .env                                ← SMTP config (never committed)
 
-scripts/                            ← dev commands (NOT part of the user CLI)
-└── screenshot.js                   ← capture storefronts only (npm run screenshot)
+scripts/                            ← dev/maintenance commands (NOT part of the wizard)
+├── screenshot.js                   ← capture storefronts only (npm run screenshot)
+├── clean.js                        ← delete regenerable junk: artifacts + sheet cache (npm run clean)
+└── suppress.js                     ← add an email to the do-not-send list (npm run suppress -- <email>)
 
 experimental/                       ← Tier B (ESP bounce/complaint) — NOT in the live flow
 ├── delivery-events.js              ← normalize ESP events (SES/SendGrid) → suppression
@@ -147,7 +151,7 @@ src/                                ← TypeScript source (.ts) — edit code he
 │   │   └── shop-capturer.ts        ← screenshot storefronts (Playwright, parallel/per-seller, cached)
 │   ├── render/
 │   │   ├── template.ts             ← Handlebars: build HTML + plain-text + subject (compile cache)
-│   │   └── shop-url.ts             ← build the CTA shop_url (+ seller identity token if enabled)
+│   │   └── shop-url.ts             ← build the CTA shop_url (+ UTM marker / seller identity token)
 │   └── mailer/
 │       └── campaign-sender.ts      ← send (throttle, retry, checkpoint, anti-spam headers)
 ├── adapters/                       ← I/O edge (isolates third-party libs)

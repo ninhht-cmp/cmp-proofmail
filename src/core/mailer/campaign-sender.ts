@@ -86,12 +86,14 @@ export function buildMessage(
 ) {
   // Tokenize ONCE here so the HTML and text parts carry the same CTA link (and the
   // screenshot capture, which uses seller.shop_url directly, stays un-tokenized).
-  const shopUrl = shopUrlFor(seller, config.tracking);
+  // utm_campaign = the mail template (design) name, so clicks attribute per design.
+  const shopUrl = shopUrlFor(seller, { ...config.tracking, utmCampaign: config.mail.template });
   const html = buildHtml(seller, {
     imageSrc: 'cid:shopshot',
     assets: brandAssetSrcs(),
     template: config.mail.template,
     shopUrl,
+    unsubscribe: config.mail.unsubscribe,
   });
   const text = buildText(seller, {
     fromName: config.mail.fromName,

@@ -57,11 +57,27 @@ test('buildHtml: no unresolved handlebars, dynamic fields + inline images presen
   assert.ok(html.includes('src="cid:ftr"'), 'footer image');
 });
 
+test('buildHtml: footer shows a clickable unsubscribe when one is provided', () => {
+  const html = buildHtml(seller, {
+    imageSrc: 'cid:shopshot',
+    assets,
+    unsubscribe: 'mailto:seller@comacpro.net?subject=unsubscribe',
+  });
+  assert.match(html, /href="mailto:seller@comacpro\.net\?subject(=|&#x3D;)unsubscribe"/);
+  assert.ok(/>Unsubscribe<\/a>/.test(html), 'visible Unsubscribe link text');
+});
+
+test('buildHtml: no unsubscribe provided → no opt-out link, no leftover handlebars', () => {
+  const html = buildHtml(seller, { imageSrc: 'cid:shopshot', assets });
+  assert.ok(!html.includes('>Unsubscribe</a>'));
+  assert.equal(/{{[^}]+}}/.test(html), false, 'no leftover {{...}}');
+});
+
 test('buildText renders the plain-text part from templates/<name>.txt.hbs', () => {
   const txt = buildText(seller, {
     fromName: 'ComacPro JSC',
     contact: 'seller@comacpro.net',
-    template: 'touch',
+    template: 'intro',
   });
   assert.equal(/{{[^}]+}}/.test(txt), false, 'no leftover handlebars');
   assert.ok(txt.includes('Mateco GmbH'), 'seller name');
@@ -74,6 +90,13 @@ test('buildText falls back to a generic body when a template has no .txt twin', 
   const txt = buildText(seller, { fromName: 'X', contact: 'x@y.z', template: '__no_txt_twin__' });
   assert.ok(txt.includes('Mateco GmbH'));
   assert.ok(/unsubscribe/i.test(txt));
+});
+
+test('buildText does NOT HTML-escape — a CTA link with &/= stays a usable plain-text URL', () => {
+  const shopUrl = 'https://example.com/store/mateco?utm_source=email&utm_campaign=intro';
+  const txt = buildText(seller, { fromName: 'X', contact: 'x@y.z', shopUrl });
+  assert.ok(txt.includes(shopUrl), 'plain-text link must be raw, not &amp;/&#x3D; escaped');
+  assert.ok(!txt.includes('&amp;') && !txt.includes('&#x3D;'));
 });
 
 test('brandAssetSrcs: maps each brand image to its cid', () => {
@@ -94,13 +117,13 @@ test('multi-template: a dropped-in templates/<name>.hbs renders by name', () => 
 
 test('paths.template sanitizes the name (no traversal)', () => {
   assert.ok(paths.template('../../etc/passwd').endsWith('etcpasswd.hbs'));
-  assert.ok(paths.template().endsWith('touch.hbs'));
+  assert.ok(paths.template().endsWith('intro.hbs'));
 });
 
 test('subjectTemplateFor: falls back to MAIL_SUBJECT when a design ships no subject', () => {
-  // 'touch' (default) has no .subject.hbs → uses the shared env subject verbatim.
+  // 'intro' (default) has no .subject.hbs → uses the shared env subject verbatim.
   assert.equal(
-    subjectTemplateFor('touch', 'ENV SUBJECT {{seller_name}}'),
+    subjectTemplateFor('intro', 'ENV SUBJECT {{seller_name}}'),
     'ENV SUBJECT {{seller_name}}',
   );
 });
@@ -122,9 +145,9 @@ test('subjectTemplateFor: a per-design subject overrides the fallback (newline s
   }
 });
 
-test('the shipped followup design carries its own subject (distinct from touch)', () => {
-  const touchSubj = subjectTemplateFor('touch', 'DEFAULT');
+test('the shipped followup design carries its own subject (distinct from intro)', () => {
+  const introSubj = subjectTemplateFor('intro', 'DEFAULT');
   const followupSubj = subjectTemplateFor('followup', 'DEFAULT');
-  assert.notEqual(followupSubj, touchSubj, 'followup must not reuse the touch subject');
+  assert.notEqual(followupSubj, introSubj, 'followup must not reuse the intro subject');
   assert.ok(followupSubj.includes('{{seller_name}}'), 'still personalized');
 });

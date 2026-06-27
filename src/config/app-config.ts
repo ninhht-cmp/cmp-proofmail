@@ -32,8 +32,9 @@ function normalizeSmtpPass(raw: string | undefined): string {
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const mailsPerHour = Number(env.MAILS_PER_HOUR || 100);
   const fromEmail = env.MAIL_FROM_EMAIL || env.SMTP_USER || '';
-  // List-Unsubscribe = a clean opt-out instead of a spam report. The operator must
-  // honor "unsubscribe" replies by adding them to the suppression list.
+  // List-Unsubscribe = a clean opt-out instead of a spam report. The opt-out arrives
+  // as an "unsubscribe" reply; the operator honors it via `npm run suppress` (or the
+  // suppress.bat/.command launcher), which adds the address to the suppression list.
   const unsubscribe = fromEmail ? `mailto:${fromEmail}?subject=unsubscribe` : '';
   return {
     smtp: {
@@ -53,7 +54,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       subjectTemplate:
         env.MAIL_SUBJECT ||
         '{{from_name}} — Your Equipment Is Now Visible to {{seller_name}} on comacpro.net',
-      template: env.MAIL_TEMPLATE || 'touch',
+      template: env.MAIL_TEMPLATE || 'intro',
       // 'smtp' = deliver over SMTP; 'outlook-draft' = open a pre-filled draft in
       // classic Outlook (Windows) to send by hand. --draft overrides per run.
       transport: env.MAIL_TRANSPORT === 'outlook-draft' ? 'outlook-draft' : 'smtp',

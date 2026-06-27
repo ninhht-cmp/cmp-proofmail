@@ -33,7 +33,8 @@ export function writeEmailPreview(
     imageSrc: fileSrc(shotPath),
     assets,
     template: config.mail.template,
-    shopUrl: shopUrlFor(seller, config.tracking),
+    shopUrl: shopUrlFor(seller, { ...config.tracking, utmCampaign: config.mail.template }),
+    unsubscribe: config.mail.unsubscribe,
   });
 
   const subjectTemplate = subjectTemplateFor(config.mail.template, config.mail.subjectTemplate);

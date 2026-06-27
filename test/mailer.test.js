@@ -22,7 +22,7 @@ test('sendOne sets List-Unsubscribe and a text part; subject is personalized', a
       fromEmail: 's@comacpro.net',
       unsubscribe: 'mailto:unsub@comacpro.net?subject=unsubscribe',
       subjectTemplate: 'Hi {{seller_name}} — {{from_name}}',
-      template: 'touch',
+      template: 'intro',
     },
   };
 
@@ -45,7 +45,7 @@ test('sendOne omits compliance headers when unsubscribe is unset', async () => {
       fromName: 'X',
       fromEmail: 's@x.com',
       subjectTemplate: '{{seller_name}}',
-      template: 'touch',
+      template: 'intro',
     },
   };
 
@@ -61,7 +61,7 @@ test('sendOne honors overrideTo (the test-send path)', async () => {
       fromName: 'X',
       fromEmail: 's@x.com',
       subjectTemplate: '{{seller_name}}',
-      template: 'touch',
+      template: 'intro',
     },
   };
 
@@ -78,7 +78,7 @@ test('sendOne sets bcc when MAIL_BCC is configured (mailbox copy)', async () => 
       fromEmail: 's@x.com',
       bcc: 'archive@x.com',
       subjectTemplate: '{{seller_name}}',
-      template: 'touch',
+      template: 'intro',
     },
   };
 
@@ -95,7 +95,7 @@ test('sendOne omits bcc on a test send so it does not fan out copies', async () 
       fromEmail: 's@x.com',
       bcc: 'archive@x.com',
       subjectTemplate: '{{seller_name}}',
-      template: 'touch',
+      template: 'intro',
     },
   };
 
@@ -114,7 +114,7 @@ test('buildMessage never carries bcc (so the raw/archived copy cannot leak it)',
       fromEmail: 's@x.com',
       bcc: 'archive@x.com',
       subjectTemplate: '{{seller_name}}',
-      template: 'touch',
+      template: 'intro',
     },
   };
   const msg = buildMessage(seller, { config });

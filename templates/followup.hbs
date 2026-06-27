@@ -84,8 +84,8 @@
     </style>
   </head>
   <!--
-  Follow-up email (2nd touch) — same design/assets as email.hbs; only the intro
-  and preview-store copy differ. Selectable via MAIL_TEMPLATE=followup.
+  Follow-up email (sent after intro) — same design/assets as intro.hbs; only the
+  opening and preview-store copy differ. Selectable via MAIL_TEMPLATE=followup.
   -->
   <body
     style="margin:0;padding:0;background:#eef1f4;font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased;"
@@ -266,6 +266,15 @@
                   width="592"
                   style="display:block;width:100%;max-width:592px;height:auto;border:0;margin-top:18px;"
                 />
+              </td>
+            </tr>
+
+            <!-- ===================== UNSUBSCRIBE (visible opt-out) ===================== -->
+            <tr>
+              <td
+                style="padding:0 32px 22px 32px;color:#9aa6b2;font-size:12px;line-height:1.6;text-align:center;"
+              >
+                You're receiving this as a one-time business outreach.{{#if unsubscribe}} Prefer not to receive these emails? <a href="{{unsubscribe}}" style="color:#9aa6b2;text-decoration:underline;">Unsubscribe</a>.{{/if}}
               </td>
             </tr>
 

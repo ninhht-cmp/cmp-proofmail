@@ -86,5 +86,13 @@ Mở lại công cụ → chọn **đúng nguồn cũ** (cùng file / cùng link
 - Cấu hình `.env` và lịch sử đã-gửi được **giữ nguyên** (không gửi trùng).
 - Nếu bản mới cần thư viện mới, công cụ **tự cài lại** ở lần mở kế tiếp (chờ 1–2 phút) — bạn **không cần làm gì thêm**.
 
+## Máy đầy dung lượng?
+
+Bấm đúp **`clean.bat`** (Windows) / **`clean.command`** (Mac) để xóa **ảnh chụp gian hàng + file cache** tạm, lấy lại dung lượng. **An toàn:** lịch sử đã-gửi và danh sách không-gửi-lại **giữ nguyên** (không gửi trùng); lần sau tool tự chụp lại ảnh khi cần.
+
+## Có người xin "hủy nhận mail" (unsubscribe)?
+
+Khi một người bán trả lời xin **ngừng nhận email**: bấm đúp **`suppress.bat`** (Windows) / **`suppress.command`** (Mac) → **nhập email của họ** → Enter. Từ đó tool **không bao giờ gửi cho địa chỉ đó nữa**. Hãy làm ngay để tránh bị báo spam.
+
 ---
 *Cần giúp thêm: liên hệ quản lý / bộ phận kỹ thuật.*
