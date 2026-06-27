@@ -30,7 +30,7 @@ export const brandAssets = [
 ];
 
 // Sanitize a design name into a filename — no path traversal.
-const safeName = (name: string) => String(name).replace(/[^a-z0-9_-]/gi, '') || 'intro';
+const safeName = (name: string) => String(name).replace(/[^a-z0-9_-]/gi, '') || 'touch';
 
 export const paths = {
   artifactsDir: ARTIFACTS_DIR,
@@ -38,9 +38,9 @@ export const paths = {
   assetsDir: ASSETS_DIR,
   asset: (file: string) => resolve(ASSETS_DIR, file),
   shot: (slug: string) => resolve(ARTIFACTS_DIR, `shot_${slug}.jpg`),
-  template: (name = 'intro') => resolve(TEMPLATES_DIR, `${safeName(name)}.hbs`),
-  textTemplate: (name = 'intro') => resolve(TEMPLATES_DIR, `${safeName(name)}.txt.hbs`),
-  subjectTemplate: (name = 'intro') => resolve(TEMPLATES_DIR, `${safeName(name)}.subject.hbs`),
+  template: (name = 'touch') => resolve(TEMPLATES_DIR, `${safeName(name)}.hbs`),
+  textTemplate: (name = 'touch') => resolve(TEMPLATES_DIR, `${safeName(name)}.txt.hbs`),
+  subjectTemplate: (name = 'touch') => resolve(TEMPLATES_DIR, `${safeName(name)}.subject.hbs`),
   report: (id?: string) => resolve(REPORTS_DIR, `report-${safeId(id)}.csv`),
   suppression: () => resolve(STATE_DIR, 'suppression.json'),
   sheetCsv: (id: string, gid: string) =>
@@ -56,13 +56,13 @@ export const missingBrandAssets = (): string[] =>
   brandAssets.filter((a) => !existsSync(paths.asset(a.file))).map((a) => a.file);
 
 // Selectable designs: each templates/<name>.hbs is one design; its .txt.hbs /
-// .subject.hbs twins are PARTS of it, not designs. Default 'intro' sorts first.
+// .subject.hbs twins are PARTS of it, not designs. Default 'touch' sorts first.
 export function listTemplates(): string[] {
   try {
     const names = readdirSync(TEMPLATES_DIR)
       .filter((f) => f.endsWith('.hbs') && !f.endsWith('.txt.hbs') && !f.endsWith('.subject.hbs'))
       .map((f) => f.slice(0, -'.hbs'.length))
-      .sort((a, b) => (a === 'intro' ? -1 : b === 'intro' ? 1 : a.localeCompare(b)));
+      .sort((a, b) => (a === 'touch' ? -1 : b === 'touch' ? 1 : a.localeCompare(b)));
     return names;
   } catch {
     return [];

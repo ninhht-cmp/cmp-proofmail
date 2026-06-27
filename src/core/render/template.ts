@@ -1,5 +1,5 @@
 // Renders the clickable HTML email from a Handlebars template. Templates are
-// selected by name (default 'intro' = templates/intro.hbs); add a design by
+// selected by name (default 'touch' = templates/touch.hbs); add a design by
 // dropping a new templates/<name>.hbs — no code change.
 import Handlebars from 'handlebars';
 import { paths, readText, fileExists, fileMtimeMs } from '../../adapters/storage.js';
@@ -48,7 +48,7 @@ export function buildHtml(
   {
     imageSrc,
     assets = {},
-    template = 'intro',
+    template = 'touch',
     shopUrl,
     unsubscribe,
   }: {
@@ -79,7 +79,7 @@ const textCache = new Map<string, { compiled: Compiled; mtime: number }>();
 let defaultTextCompiled: Compiled | null = null;
 
 // noEscape: this is the PLAIN-TEXT part — HTML-escaping has no place here. Without
-// it a CTA link with query params (?utm_source=email&utm_campaign=intro, or ?ref=)
+// it a CTA link with query params (?utm_source=email&utm_campaign=touch, or ?ref=)
 // would render as ...&amp;...&#x3D;..., a broken URL in a text client.
 function getTextTemplate(name: string): Compiled {
   const file = paths.textTemplate(name);
@@ -99,7 +99,7 @@ export function buildText(
   {
     fromName,
     contact = '',
-    template = 'intro',
+    template = 'touch',
     shopUrl,
   }: { fromName: string; contact?: string; template?: string; shopUrl?: string },
 ): string {

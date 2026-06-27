@@ -77,7 +77,7 @@ test('buildText renders the plain-text part from templates/<name>.txt.hbs', () =
   const txt = buildText(seller, {
     fromName: 'ComacPro JSC',
     contact: 'seller@comacpro.net',
-    template: 'intro',
+    template: 'touch',
   });
   assert.equal(/{{[^}]+}}/.test(txt), false, 'no leftover handlebars');
   assert.ok(txt.includes('Mateco GmbH'), 'seller name');
@@ -93,7 +93,7 @@ test('buildText falls back to a generic body when a template has no .txt twin', 
 });
 
 test('buildText does NOT HTML-escape — a CTA link with &/= stays a usable plain-text URL', () => {
-  const shopUrl = 'https://example.com/store/mateco?utm_source=email&utm_campaign=intro';
+  const shopUrl = 'https://example.com/store/mateco?utm_source=email&utm_campaign=touch';
   const txt = buildText(seller, { fromName: 'X', contact: 'x@y.z', shopUrl });
   assert.ok(txt.includes(shopUrl), 'plain-text link must be raw, not &amp;/&#x3D; escaped');
   assert.ok(!txt.includes('&amp;') && !txt.includes('&#x3D;'));
@@ -117,13 +117,13 @@ test('multi-template: a dropped-in templates/<name>.hbs renders by name', () => 
 
 test('paths.template sanitizes the name (no traversal)', () => {
   assert.ok(paths.template('../../etc/passwd').endsWith('etcpasswd.hbs'));
-  assert.ok(paths.template().endsWith('intro.hbs'));
+  assert.ok(paths.template().endsWith('touch.hbs'));
 });
 
 test('subjectTemplateFor: falls back to MAIL_SUBJECT when a design ships no subject', () => {
-  // 'intro' (default) has no .subject.hbs → uses the shared env subject verbatim.
+  // 'touch' (default) has no .subject.hbs → uses the shared env subject verbatim.
   assert.equal(
-    subjectTemplateFor('intro', 'ENV SUBJECT {{seller_name}}'),
+    subjectTemplateFor('touch', 'ENV SUBJECT {{seller_name}}'),
     'ENV SUBJECT {{seller_name}}',
   );
 });
@@ -145,9 +145,9 @@ test('subjectTemplateFor: a per-design subject overrides the fallback (newline s
   }
 });
 
-test('the shipped followup design carries its own subject (distinct from intro)', () => {
-  const introSubj = subjectTemplateFor('intro', 'DEFAULT');
+test('the shipped followup design carries its own subject (distinct from touch)', () => {
+  const touchSubj = subjectTemplateFor('touch', 'DEFAULT');
   const followupSubj = subjectTemplateFor('followup', 'DEFAULT');
-  assert.notEqual(followupSubj, introSubj, 'followup must not reuse the intro subject');
+  assert.notEqual(followupSubj, touchSubj, 'followup must not reuse the touch subject');
   assert.ok(followupSubj.includes('{{seller_name}}'), 'still personalized');
 });

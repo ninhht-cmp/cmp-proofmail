@@ -112,9 +112,9 @@ rollback.bat / rollback.sh          ← return to the previous release
 clean.bat / clean.sh                ← reclaim disk: delete screenshots + sheet cache (keeps send history & suppression)
 suppress.bat / suppress.sh          ← add an email to the do-not-send list (honor an unsubscribe request)
 data/                               ← drop seller lists here
-templates/intro.hbs                 ← default HTML design (one source for email + image)
-templates/intro.txt.hbs             ← plain-text twin (same data, never drifts)
-templates/followup.hbs              ← follow-up design (sent after 'intro' to the same seller)
+templates/touch.hbs                 ← default HTML design (one source for email + image)
+templates/touch.txt.hbs             ← plain-text twin (same data, never drifts)
+templates/followup.hbs              ← follow-up design (sent after 'touch' to the same seller)
 templates/followup.subject.hbs      ← optional per-design subject (absent → MAIL_SUBJECT)
                                       Add a design: drop templates/<name>.hbs (+ .txt.hbs, + .subject.hbs);
                                       pick it in the CLI (or MAIL_TEMPLATE=<name> / --template <name>)

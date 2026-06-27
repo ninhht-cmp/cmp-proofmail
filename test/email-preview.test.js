@@ -13,10 +13,10 @@ const seller = {
   shop_url: 'https://shop.example.com/an-phat',
   slug: '__test_preview',
 };
-// 'intro' design ships in templates/; subject has no per-design file → uses this fallback.
+// 'touch' design ships in templates/; subject has no per-design file → uses this fallback.
 const config = {
   mail: {
-    template: 'intro',
+    template: 'touch',
     fromName: 'CMP Shop',
     subjectTemplate: 'Gian hàng của {{seller_name}}',
   },

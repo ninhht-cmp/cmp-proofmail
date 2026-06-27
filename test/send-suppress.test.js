@@ -41,7 +41,7 @@ test('sendCampaign: skips suppressed up-front and auto-suppresses permanent 5xx'
       fromName: 'X',
       fromEmail: 's@x.com',
       subjectTemplate: '{{seller_name}}',
-      template: 'intro',
+      template: 'touch',
     },
     throttle: { mailDelayMs: 0 },
   };
@@ -97,7 +97,7 @@ test('sendCampaign: retries a transient (4xx) failure, then records the send', a
       fromName: 'X',
       fromEmail: 's@x.com',
       subjectTemplate: '{{seller_name}}',
-      template: 'intro',
+      template: 'touch',
     },
     throttle: { mailDelayMs: 0 },
   };
@@ -154,7 +154,7 @@ test('preflight: missingBrandAssets reports gaps and sendCampaign fails fast', a
               fromName: 'X',
               fromEmail: 's@x.com',
               subjectTemplate: '{{seller_name}}',
-              template: 'intro',
+              template: 'touch',
             },
             throttle: { mailDelayMs: 0 },
           },

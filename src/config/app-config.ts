@@ -54,7 +54,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       subjectTemplate:
         env.MAIL_SUBJECT ||
         '{{from_name}} — Your Equipment Is Now Visible to {{seller_name}} on comacpro.net',
-      template: env.MAIL_TEMPLATE || 'intro',
+      template: env.MAIL_TEMPLATE || 'touch',
       // 'smtp' = deliver over SMTP; 'outlook-draft' = open a pre-filled draft in
       // classic Outlook (Windows) to send by hand. --draft overrides per run.
       transport: env.MAIL_TRANSPORT === 'outlook-draft' ? 'outlook-draft' : 'smtp',

@@ -4,14 +4,14 @@ import { select } from '@inquirer/prompts';
 import { listTemplates } from '../adapters/storage.js';
 import { ui, c } from './ui.js';
 
-// The default design keeps the legacy un-suffixed campaign id, so sent-history
-// survives per-design scoping (and the rename); other designs get a suffixed store.
-export const DEFAULT_TEMPLATE = 'intro';
+// The default design keeps the legacy un-suffixed campaign id, so sent-history from
+// before per-design scoping survives; other designs get a suffixed store.
+export const DEFAULT_TEMPLATE = 'touch';
 
 // Vietnamese one-liner shown (dimmed, under the focused row) so non-technical staff
 // pick the right design. Keyed by name; a dropped-in design with no entry shows none.
 const TEMPLATE_LABELS: Record<string, string> = {
-  intro: 'Email giới thiệu — gửi cho người bán lần đầu',
+  touch: 'Email giới thiệu — gửi cho người bán lần đầu',
   followup: 'Email nhắc lại — gửi cho người chưa phản hồi',
 };
 
@@ -23,7 +23,7 @@ export function campaignIdFor(fileBase: string, template: string): string {
 
 // With 0–1 designs there's nothing to choose — keep `current`, never block the run.
 export async function pickTemplate({
-  current = 'intro',
+  current = 'touch',
 }: { current?: string } = {}): Promise<string> {
   const templates = listTemplates();
   if (templates.length <= 1) {

@@ -74,9 +74,9 @@ test('shopUrlFor honours a custom path segment', () => {
 // ── UTM marker (interim tracking; utm_source fixed = 'email', gated on a campaign) ──
 
 test('shopUrlFor adds utm_source=email + utm_campaign when a campaign is passed (no token)', () => {
-  const url = new URL(shopUrlFor({ shop_url: URL_REAL }, { utmCampaign: 'intro' }));
+  const url = new URL(shopUrlFor({ shop_url: URL_REAL }, { utmCampaign: 'touch' }));
   assert.equal(url.searchParams.get('utm_source'), 'email');
-  assert.equal(url.searchParams.get('utm_campaign'), 'intro');
+  assert.equal(url.searchParams.get('utm_campaign'), 'touch');
   assert.equal(url.searchParams.get('ref'), null); // token off → no ref
 });
 
@@ -92,22 +92,22 @@ test('shopUrlFor: no campaign and no secret → link unchanged', () => {
 
 test('shopUrlFor: UTM and token coexist (both markers present)', () => {
   const url = new URL(
-    shopUrlFor({ shop_url: URL_REAL }, { tokenSecret: SECRET, utmCampaign: 'intro' }),
+    shopUrlFor({ shop_url: URL_REAL }, { tokenSecret: SECRET, utmCampaign: 'touch' }),
   );
   assert.equal(url.searchParams.get('utm_source'), 'email');
-  assert.equal(url.searchParams.get('utm_campaign'), 'intro');
+  assert.equal(url.searchParams.get('utm_campaign'), 'touch');
   assert.equal(readToken(url.searchParams.get('ref'), SECRET), SLUG);
 });
 
 test('shopUrlFor: UTM applies even when the URL names no seller (UTM is slug-independent)', () => {
   const url = new URL(
-    shopUrlFor({ shop_url: 'https://comacpro.net/about' }, { utmCampaign: 'intro' }),
+    shopUrlFor({ shop_url: 'https://comacpro.net/about' }, { utmCampaign: 'touch' }),
   );
   assert.equal(url.searchParams.get('utm_source'), 'email');
 });
 
 test('shopUrlFor: UTM preserves an existing query string', () => {
-  const url = new URL(shopUrlFor({ shop_url: `${URL_REAL}?a=1` }, { utmCampaign: 'intro' }));
+  const url = new URL(shopUrlFor({ shop_url: `${URL_REAL}?a=1` }, { utmCampaign: 'touch' }));
   assert.equal(url.searchParams.get('a'), '1');
   assert.equal(url.searchParams.get('utm_source'), 'email');
 });
