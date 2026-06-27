@@ -1,8 +1,8 @@
 // Builds the CTA href that goes INTO the email: the seller's shop_url plus two
 // independent markers:
-//   • a UTM tag (utm_source=email + utm_campaign=<mail template>) — the provenance
-//     marker that lets the marketplace tell an email click from an organic visit.
-//     Applied whenever a campaign is passed (every real send does).
+//   • a UTM tag (utm_source=email, utm_campaign=<design>-<send-month>, utm_content=explore_store)
+//     — lets the marketplace tell an email click from an organic visit, and which CTA and
+//     wave it was. Applied whenever a campaign is passed (every real send does).
 //   • a signed seller-identity token — so a click attributes to the seller who owns
 //     the link, not the logged-in account. Only when a secret is configured.
 //
@@ -17,6 +17,11 @@ import type { Seller } from '../types.js';
 // utm_source is intrinsic — this tool only ever sends email, so it's a constant,
 // not config (no value to tune). utm_campaign varies (the mail template).
 const UTM_SOURCE = 'email';
+
+// utm_content pins WHICH CTA was clicked — intrinsic like utm_source (every mail here is
+// the "Explore your store" button). It's the precise signal the FE keys on, and separates
+// this CTA from the marketplace's own mail (unsubscribe/notification also use utm_source=email).
+const UTM_CONTENT = 'explore_store';
 
 // The marketplace routes a storefront as /seller/<sellerSlug>/... — this is the
 // path segment that precedes the slug. A constant, not config: it's a fixed
@@ -40,6 +45,16 @@ export function sellerSlugFromUrl(shopUrl: string, marker = SELLER_PATH_SEGMENT)
   } catch {
     return null;
   }
+}
+
+// The utm_campaign VALUE on the CTA link: design + send-month, e.g. "followup-2026-06".
+// Distinct from the local store id (campaignIdFor), which must stay date-free or a resume
+// would re-send everyone. Month granularity = per-wave attribution that survives a
+// same-month resume; the design prefix rolls a design's waves back up (campaign LIKE
+// 'followup-%'). Local time = the operator's calendar month.
+export function utmCampaignFor(template: string, date: Date): string {
+  const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  return `${template}-${month}`;
 }
 
 export function shopUrlFor(
@@ -71,6 +86,7 @@ export function shopUrlFor(
   if (utmCampaign) {
     url.searchParams.set('utm_source', UTM_SOURCE);
     url.searchParams.set('utm_campaign', utmCampaign);
+    url.searchParams.set('utm_content', UTM_CONTENT);
   }
   // Signed identity token — only when a secret is set AND the URL names a seller
   // (else there is nothing meaningful to sign).

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { signToken, readToken } from '../dist/lib/signed-token.js';
-import { shopUrlFor, sellerSlugFromUrl } from '../dist/core/render/shop-url.js';
+import { shopUrlFor, sellerSlugFromUrl, utmCampaignFor } from '../dist/core/render/shop-url.js';
 
 const SECRET = 'test-secret-key';
 const SLUG = 'zhicheng-construction-machinery-co-limited-7SriYk47cCnNayhx37CTzb';
@@ -71,18 +71,39 @@ test('shopUrlFor honours a custom path segment', () => {
   assert.equal(readToken(new URL(out).searchParams.get('ref'), SECRET), 'abc123');
 });
 
-// ── UTM marker (interim tracking; utm_source fixed = 'email', gated on a campaign) ──
+// ── UTM marker (interim tracking; utm_source/utm_content fixed, utm_campaign per template, gated on a campaign) ──
 
-test('shopUrlFor adds utm_source=email + utm_campaign when a campaign is passed (no token)', () => {
+test('shopUrlFor adds utm_source=email + utm_campaign + utm_content when a campaign is passed (no token)', () => {
   const url = new URL(shopUrlFor({ shop_url: URL_REAL }, { utmCampaign: 'touch' }));
   assert.equal(url.searchParams.get('utm_source'), 'email');
   assert.equal(url.searchParams.get('utm_campaign'), 'touch');
+  assert.equal(url.searchParams.get('utm_content'), 'explore_store'); // CTA marker the FE keys on
   assert.equal(url.searchParams.get('ref'), null); // token off → no ref
 });
 
 test('shopUrlFor: utm_campaign reflects the mail template per design', () => {
   const followup = new URL(shopUrlFor({ shop_url: URL_REAL }, { utmCampaign: 'followup' }));
   assert.equal(followup.searchParams.get('utm_campaign'), 'followup');
+});
+
+test('shopUrlFor: utm_content is the fixed explore_store CTA marker regardless of template', () => {
+  for (const c of ['touch', 'followup']) {
+    const url = new URL(shopUrlFor({ shop_url: URL_REAL }, { utmCampaign: c }));
+    assert.equal(url.searchParams.get('utm_content'), 'explore_store');
+  }
+});
+
+test('utmCampaignFor composes <design>-<YYYY-MM> from the send month (zero-padded, local)', () => {
+  assert.equal(utmCampaignFor('followup', new Date(2026, 5, 1)), 'followup-2026-06'); // month index 5 = June
+  assert.equal(utmCampaignFor('touch', new Date(2026, 0, 31)), 'touch-2026-01');
+  assert.equal(utmCampaignFor('touch', new Date(2026, 11, 9)), 'touch-2026-12');
+});
+
+test('shopUrlFor stamps the composed per-wave campaign as utm_campaign', () => {
+  const campaign = utmCampaignFor('followup', new Date(2026, 5, 15)); // followup-2026-06
+  const url = new URL(shopUrlFor({ shop_url: URL_REAL }, { utmCampaign: campaign }));
+  assert.equal(url.searchParams.get('utm_campaign'), 'followup-2026-06');
+  assert.equal(url.searchParams.get('utm_content'), 'explore_store');
 });
 
 test('shopUrlFor: no campaign and no secret → link unchanged', () => {
