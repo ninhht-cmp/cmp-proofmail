@@ -23,7 +23,11 @@ function getTemplate(name: string): Compiled {
 // it to all templates at once.
 function context(
   seller: { seller_name: string; shop_url: string },
-  { imageSrc, assets, shopUrl }: { imageSrc: string; assets?: Record<string, string>; shopUrl?: string },
+  {
+    imageSrc,
+    assets,
+    shopUrl,
+  }: { imageSrc: string; assets?: Record<string, string>; shopUrl?: string },
 ) {
   return {
     seller_name: seller.seller_name,
