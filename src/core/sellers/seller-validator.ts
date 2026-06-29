@@ -18,6 +18,14 @@ function emailToSlug(email: string): string {
   return email.replace(/[^a-z0-9]+/gi, '_').toLowerCase();
 }
 
+// Drop control chars (CR/LF/tab/…) from a free-text field. seller_name renders
+// into the mail Subject (a CRLF there is header injection / a broken header) and
+// both it and phone land in the CSV report; email/shop_url are already
+// whitespace-free by their regexes. Collapse the run to one space, then trim.
+function sanitizeText(s: string): string {
+  return s.replace(/[\u0000-\u001f\u007f]+/g, ' ').trim();
+}
+
 // Tiny deterministic hash (djb2 → base36). Not cryptographic — only disambiguates
 // two emails that collapse to the same base slug. Inline → no node:crypto in core.
 function shortHash(str: string): string {
@@ -77,12 +85,15 @@ export function validateSellers(rawRows: Record<string, any>[]): ValidationResul
     seenEmail.set(email, line);
     valid.push({
       // Required header is "Name" (→ name); keep "seller_name" as a legacy alias.
-      seller_name: row.name || row.seller_name || '(không tên)',
+      // Strip control chars: this value renders into the Subject header.
+      seller_name: sanitizeText(row.name || row.seller_name || '') || '(không tên)',
       email,
       shop_url: row.shop_url,
       // Optional, display-only (shown in the manual picker; never used to send).
       // Accept common header spellings → all normalize to one of these keys.
-      phone: row.phone || row.sdt || row.phone_number || row.mobile || row['số_điện_thoại'] || '',
+      phone: sanitizeText(
+        row.phone || row.sdt || row.phone_number || row.mobile || row['số_điện_thoại'] || '',
+      ),
       slug: emailToSlug(email),
     });
   });

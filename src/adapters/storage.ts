@@ -118,9 +118,15 @@ const REPORT_COLUMNS = [
   'deliveryAt',
 ];
 
-// RFC-4180 quoting (SMTP error messages often hold commas/quotes/newlines).
+// RFC-4180 quoting (SMTP error messages often hold commas/quotes/newlines), plus
+// a formula-injection guard: Excel/Sheets evaluate a cell whose text starts with
+// = + - @ (or a leading tab/CR) as a FORMULA — even when the CSV field was quoted,
+// since quoting is only CSV transport. seller_name/error come from an uploaded
+// list (semi-trusted), so a name like =HYPERLINK(...) would run on open. Prefix a
+// single quote to neutralize it; Excel shows the quote-stripped text in the cell.
 function csvField(v: unknown): string {
-  const s = v == null ? '' : String(v);
+  let s = v == null ? '' : String(v);
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
   return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 

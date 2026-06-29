@@ -38,6 +38,17 @@ test('defaults a missing seller_name', () => {
   assert.equal(valid[0].seller_name, '(không tên)');
 });
 
+test('strips control chars from seller_name (Subject header-injection guard)', () => {
+  // A CRLF in the name would, unguarded, ride into the Subject header.
+  const { valid } = validateSellers([row({ seller_name: 'Acme\r\nBcc: evil@x\tCorp' })]);
+  assert.equal(valid[0].seller_name, 'Acme Bcc: evil@x Corp');
+});
+
+test('a name that is ONLY control chars falls back to the default', () => {
+  const { valid } = validateSellers([row({ seller_name: '\r\n\t' })]);
+  assert.equal(valid[0].seller_name, '(không tên)');
+});
+
 test('missingRequired flags absent required columns, ignores extras', () => {
   assert.deepEqual(
     validateSellers([{ Name: 'A', Email: 'a@b.co', 'Shop URL': 'https://x', Notes: 'x' }])

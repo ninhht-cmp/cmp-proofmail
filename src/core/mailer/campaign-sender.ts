@@ -112,7 +112,9 @@ export function buildMessage(
   const subjectTemplate = subjectTemplateFor(config.mail.template, config.mail.subjectTemplate);
 
   return {
-    from: `"${config.mail.fromName}" <${config.mail.fromEmail}>`,
+    // Object form (not a hand-built `"name" <addr>` string) so nodemailer encodes
+    // the display name — a fromName with a quote/comma/non-ASCII can't break the header.
+    from: { name: config.mail.fromName, address: config.mail.fromEmail },
     to: overrideTo || seller.email,
     subject: buildSubject(seller, { fromName: config.mail.fromName, subjectTemplate }),
     html,

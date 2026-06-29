@@ -15,6 +15,10 @@ export function sheetCsvUrl({ id, gid }: { id: string; gid: string }): string {
   return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`;
 }
 
+// Cap the download so a hung/slow connection can't freeze the wizard indefinitely
+// (no native fetch timeout) — the operator gets a clear error instead.
+const FETCH_TIMEOUT_MS = 20_000;
+
 // Returns { id, gid, text }. Throws a plain-language error if the sheet isn't
 // publicly viewable (Google answers with an HTML login page, not CSV).
 export async function fetchSheetCsv(
@@ -23,8 +27,18 @@ export async function fetchSheetCsv(
   const { id, gid } = parseSheetUrl(url);
   let res: Response;
   try {
-    res = await fetch(sheetCsvUrl({ id, gid }), { redirect: 'follow' });
+    res = await fetch(sheetCsvUrl({ id, gid }), {
+      redirect: 'follow',
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
   } catch (e) {
+    // A timeout surfaces as an AbortError — say so in plain language.
+    if (e instanceof Error && e.name === 'TimeoutError') {
+      throw new Error(
+        `Tải Google Sheet quá lâu (quá ${FETCH_TIMEOUT_MS / 1000}s) — kiểm tra mạng rồi thử lại.`,
+        { cause: e },
+      );
+    }
     throw new Error(`Không kết nối được Google Sheets: ${errMsg(e)}`, { cause: e });
   }
   if (!res.ok) {

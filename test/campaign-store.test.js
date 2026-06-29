@@ -98,3 +98,22 @@ test('report() writes a CSV with header, rows, and RFC-4180 escaping', () => {
   assert.ok(csv.includes('"said ""no"""'));
   cleanup();
 });
+
+test('report() neutralizes formula injection (= + - @) in a seller name', () => {
+  cleanup();
+  const s = createCampaignStore(ID);
+  s.markSent('evil@x.com', {
+    seller_name: '=HYPERLINK("http://evil","x")',
+    shop_url: 'https://x/e',
+    phone: '+84123', // leading + must also be defused
+    attempts: 1,
+  });
+  const csv = readFileSync(s.report(), 'utf8');
+  // Excel would evaluate a cell starting with =/+/-/@; the leading ' defuses it.
+  // The field still gets RFC-4180 quoting (it has a comma), with the ' inside.
+  assert.ok(csv.includes(`"'=HYPERLINK`), 'formula name is prefixed with a quote');
+  assert.ok(csv.includes(`'+84123`), 'leading + is prefixed with a quote');
+  // A benign name is untouched (no spurious quote prefix).
+  assert.ok(!csv.includes(`'evil@x.com`), 'plain values are not prefixed');
+  cleanup();
+});

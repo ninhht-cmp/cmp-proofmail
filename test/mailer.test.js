@@ -121,6 +121,20 @@ test('buildMessage never carries bcc (so the raw/archived copy cannot leak it)',
   assert.equal(msg.bcc, undefined);
 });
 
+test('buildMessage uses object form for `from` so a quote in the name cannot break the header', () => {
+  const config = {
+    mail: {
+      fromName: 'A " Co, Ltd',
+      fromEmail: 's@x.com',
+      subjectTemplate: '{{seller_name}}',
+      template: 'touch',
+    },
+  };
+  const msg = buildMessage(seller, { config });
+  // Object form → nodemailer encodes the display name; we never hand-build the string.
+  assert.deepEqual(msg.from, { name: 'A " Co, Ltd', address: 's@x.com' });
+});
+
 test('envelopeRecipients: bcc rides the envelope (delivered, invisible to recipient)', () => {
   const config = { mail: { fromEmail: 's@x.com', bcc: 'a@x.com, b@x.com' } };
   assert.deepEqual(envelopeRecipients(seller, config), ['a@acme.io', 'a@x.com', 'b@x.com']);
