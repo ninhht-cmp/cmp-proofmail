@@ -25,6 +25,15 @@ export type CaptureResult = Seller & {
   error?: string;
 };
 
+/** What the screenshot step actually needs — decoupled from the seller domain so
+ * the enrich tool (file → screenshot → S3) reuses capture without an email/Seller. */
+export interface CaptureTarget {
+  /** http(s) page to screenshot. */
+  url: string;
+  /** Filesystem/URL-safe, collision-free key for the captured file. */
+  slug: string;
+}
+
 /** A row dropped during validation, with a human-readable reason. */
 export interface SkippedRow {
   line: number;
@@ -124,6 +133,17 @@ export interface TrackingConfig {
   tokenParam: string;
 }
 
+/** CMP backend, used by the image-enrich tool to host screenshots on S3. */
+export interface ApiConfig {
+  /** API root, e.g. https://api.dev.cmpup.com (no trailing slash). */
+  baseUrl: string;
+  /** Which signin endpoint: an internal/admin account vs an external user one. */
+  scope: 'internal' | 'external';
+  /** Signin credentials — from .env only, never hardcoded ('' = not configured). */
+  email: string;
+  password: string;
+}
+
 /** The full operational config (factory output of loadConfig). */
 export interface Config {
   smtp: SmtpConfig;
@@ -132,4 +152,5 @@ export interface Config {
   throttle: ThrottleConfig;
   capture: CaptureConfig;
   tracking: TrackingConfig;
+  api: ApiConfig;
 }

@@ -63,10 +63,32 @@ node dist/cli/main.js --file=data/sellers.xlsx             # interactive send fr
 node dist/cli/main.js --draft --file=data/sellers.xlsx     # fill Outlook drafts, send by hand (Windows)
 node dist/cli/main.js --auto --file=data/sellers.csv --yes # bulk send, no prompts (careful!)
 npm run screenshot                                         # capture storefronts only
+npm run enrich -- --file=data/list.csv --template=followup # screenshot → upload S3 → write link col
 ```
 
 `--file=` source file · `--sheet=` Google Sheet link · `--auto` bulk · `--draft` Outlook
 drafts · `--dry` dry run (with `--auto`) · `--yes` skip confirmation.
+
+### Image-enrich tool (`npm run enrich`)
+
+A standalone command (NOT part of the send flow): a file with a URL column →
+screenshot each site → upload to S3 via the CMP API → write the public link into a
+**new** `*.enriched.*` file (input untouched). Output format follows the input
+(csv→csv, xlsx→xlsx via exceljs; override with `--out=name.csv|.xlsx`). Reuses the
+capture/file/CLI machinery; the only new edges are `adapters/cmp-api.ts`
+(signin/refresh + presigned-url + S3 PUT) and `core/enrich/image-enricher.ts`.
+Operator guide: `HUONG-DAN-ENRICH-ANH.md`.
+
+```bash
+npm run enrich            # wizard: pick file, URL column (auto-detected), template
+npm run enrich -- --file=data/list.csv --template=followup --url-col=website \
+  --image-col=shop_image_url --scope=internal --yes --fresh --out=result.csv
+```
+
+Needs `CMP_API_EMAIL` / `CMP_API_PASSWORD` (+ `CMP_API_SCOPE`, `CMP_API_BASE_URL`) in
+`.env` — see `HUONG-DAN-CAU-HINH-ENV.md` §8. Signs in once up front (fail-fast), resumes
+by URL (re-runs skip rows already uploaded; `--fresh` redoes all). The public URL is built
+from the BE-returned `key` + `originEndpoint`, so it's robust to scope-based key prefixing.
 
 ---
 
@@ -141,6 +163,7 @@ src/                                ← TypeScript source (.ts) — edit code he
 │   ├── template-picker.ts          ← pick design + campaignIdFor
 │   ├── email-preview.ts            ← render the real email to temp HTML + open browser
 │   ├── args.ts                     ← parse flags (--file=, --sheet=, --auto…)
+│   ├── enrich-main.ts              ← entry for `npm run enrich`: file → screenshot → S3 → link col
 │   └── ui.ts                       ← palette + banner + progress bar (ETA) + result panel
 ├── core/                           ← pure business core (no terminal, no global config)
 │   ├── types.ts                    ← domain TYPE definitions (Seller/Config/CampaignResult…) — single source
@@ -148,7 +171,9 @@ src/                                ← TypeScript source (.ts) — edit code he
 │   │   ├── seller-loader.ts        ← read CSV/XLSX → rows (tolerates blank/duplicate headers)
 │   │   └── seller-validator.ts     ← validate, dedupe, generate slug (pure)
 │   ├── capture/
-│   │   └── shop-capturer.ts        ← screenshot storefronts (Playwright, parallel/per-seller, cached)
+│   │   └── shop-capturer.ts        ← screenshot storefronts (Playwright, parallel, cached) + captureBuffer
+│   ├── enrich/
+│   │   └── image-enricher.ts       ← orchestrate screenshot → upload per URL (resume, per-row errors)
 │   ├── render/
 │   │   ├── template.ts             ← Handlebars: build HTML + plain-text + subject (compile cache)
 │   │   └── shop-url.ts             ← build the CTA shop_url (+ UTM marker / seller identity token)
@@ -158,6 +183,7 @@ src/                                ← TypeScript source (.ts) — edit code he
 │   ├── browser.ts                  ← launch Chromium
 │   ├── smtp-transport.ts           ← create the nodemailer transport
 │   ├── google-sheet.ts             ← read a Google Sheet via CSV export (read-only)
+│   ├── cmp-api.ts                  ← CMP backend: signin/refresh (Bearer) + presigned-url + S3 PUT
 │   ├── imap-sent.ts                ← save a copy to the "Sent" folder over IMAP (best-effort)
 │   ├── outlook-draft.ts (+ .ps1)   ← open a draft in Outlook Classic (Windows; .ps1 is the source asset)
 │   └── storage.ts                  ← all paths + file read/write in one place (atomic writes)

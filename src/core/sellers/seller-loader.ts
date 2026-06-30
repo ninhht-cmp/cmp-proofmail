@@ -5,8 +5,11 @@ import readXlsxFile from 'read-excel-file/node';
 import { validateSellers } from './seller-validator.js';
 import type { ValidationResult } from '../types.js';
 
-// Async because Excel parsing is. Returns an array of { column: value }.
-async function readRows(filePath: string): Promise<Record<string, any>[]> {
+// Async because Excel parsing is. Returns an array of { column: value },
+// preserving EVERY column and the header order — the enrich tool reads it directly
+// (it must keep all columns to write the result file), unlike validateSellers
+// which projects rows down to the Seller shape.
+export async function readRows(filePath: string): Promise<Record<string, any>[]> {
   const ext = extname(filePath).toLowerCase();
 
   if (ext === '.xlsx' || ext === '.xls') {

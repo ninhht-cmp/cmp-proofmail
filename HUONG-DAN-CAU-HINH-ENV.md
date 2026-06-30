@@ -94,3 +94,20 @@ Giới hạn để tránh bị khóa tài khoản: Gmail ~500/ngày · Workspace
 ## 7. Tracking sau gửi (Tầng B — bounce/complaint của ESP)
 
 Đã tách sang `experimental/` (chưa thuộc luồng gửi hiện tại). Chỉ cần khi đổi sang Amazon SES / SendGrid. Xem `experimental/README.md`.
+
+---
+
+## 8. Đăng nhập hệ thống (chỉ cho `npm run enrich`)
+
+Công cụ chụp ảnh website → tải lên hệ thống (xem `HUONG-DAN-ENRICH-ANH.md`) cần đăng nhập
+để được phép tải ảnh. **Bỏ qua mục này nếu bạn không dùng công cụ đó.**
+
+| Khóa | Điền gì |
+|---|---|
+| `CMP_API_BASE_URL` | Địa chỉ máy chủ API. Mặc định `https://api.dev.cmpup.com` |
+| `CMP_API_SCOPE` | `internal` (tài khoản nội bộ/admin) hoặc `external` (tài khoản người dùng) |
+| `CMP_API_EMAIL` | Email đăng nhập hệ thống |
+| `CMP_API_PASSWORD` | Mật khẩu đăng nhập |
+
+- Chưa rõ `internal` hay `external` → hỏi bộ phận kỹ thuật. Sai scope sẽ báo **"Sai tài khoản hoặc mật khẩu"**.
+- Công cụ **đăng nhập 1 lần trước khi chạy** để báo lỗi sớm; token tự gia hạn nếu file lớn chạy lâu.

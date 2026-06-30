@@ -11,6 +11,7 @@ import {
   readdirSync,
 } from 'node:fs';
 import { resolve } from 'node:path';
+import ExcelJS from 'exceljs';
 import { ROOT } from '../config/app-config.js';
 
 const ARTIFACTS_DIR = resolve(ROOT, 'output', 'artifacts'); // regenerable, safe to delete
@@ -233,6 +234,102 @@ export function createCampaignStore(campaignId?: string) {
       return writeCampaignReportCsv(campaignId, state().records);
     },
   };
+}
+
+// ─────────────────────────── Image enrich ───────────────────────────
+
+export interface EnrichRecord {
+  url: string;
+  status: 'ok' | 'error';
+  imageUrl?: string;
+  error?: string;
+  at?: string;
+}
+
+// EnrichStore — per-URL checkpoint for ONE enrich job (file + template), so a
+// crash/resume never re-captures or re-uploads a URL already done. Keyed by URL
+// because the output column is the image link FOR that URL; two rows sharing a URL
+// share the link. Mirrors createCampaignStore (atomic write, JSON map).
+export function createEnrichStore(jobId?: string) {
+  const file = resolve(STATE_DIR, `enrich-${safeId(jobId)}.json`);
+  let cache: Record<string, EnrichRecord> | null = null;
+  function records(): Record<string, EnrichRecord> {
+    if (cache) return cache;
+    if (!existsSync(file)) return (cache = {});
+    try {
+      return (cache = JSON.parse(readFileSync(file, 'utf8')).records || {});
+    } catch {
+      return (cache = {});
+    }
+  }
+  function persist() {
+    try {
+      ensureDirs();
+      atomicWrite(
+        file,
+        JSON.stringify({ jobId, updated: new Date().toISOString(), records: records() }, null, 2),
+      );
+    } catch {
+      // A failed checkpoint must not abort a run in progress; resume just redoes the row.
+    }
+  }
+  return {
+    file,
+    // Resume guard: URLs uploaded OK (never re-capture/re-upload these).
+    loadDone(): Set<string> {
+      return new Set(
+        Object.values(records())
+          .filter((r) => r.status === 'ok' && r.imageUrl)
+          .map((r) => r.url),
+      );
+    },
+    loadRecords(): Record<string, EnrichRecord> {
+      return records();
+    },
+    mark(url: string, rec: Omit<EnrichRecord, 'url' | 'at'>) {
+      records()[url] = { url, ...rec, at: new Date().toISOString() };
+      persist();
+    },
+    reset() {
+      cache = {};
+      persist();
+    },
+  };
+}
+
+// Write the enriched list to its OWN file (never the input). Preserves every
+// original column in order; the image/status columns are appended by the caller.
+// Same CSV safety as the campaign report: UTF-8 BOM + RFC-4180 + formula-injection
+// guard (the list is semi-trusted — a cell like =HYPERLINK(...) must not execute).
+export function writeEnrichedCsv(
+  outPath: string,
+  rows: Record<string, any>[],
+  columns: string[],
+): void {
+  const lines = [columns.map(csvField).join(',')];
+  for (const r of rows) lines.push(columns.map((col) => csvField(r[col])).join(','));
+  atomicWrite(outPath, '\uFEFF' + lines.join('\n') + '\n');
+}
+
+// Same as writeEnrichedCsv but emits a real .xlsx (single sheet) so an xlsx input
+// keeps an xlsx result. Cells are written as STRINGS (rows come in as strings),
+// so a leading "=" is stored as text, not a live formula \u2014 no injection surface,
+// no ' prefix needed (unlike CSV, where quoting is only transport). Original
+// styles/extra sheets aren't carried over; the data + new columns are.
+export async function writeEnrichedXlsx(
+  outPath: string,
+  rows: Record<string, any>[],
+  columns: string[],
+): Promise<void> {
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Sheet1');
+  ws.addRow(columns);
+  for (const r of rows) ws.addRow(columns.map((col) => (r[col] == null ? '' : String(r[col]))));
+  // exceljs has no atomic write; go via a temp file + rename so a crash mid-write
+  // never leaves a half-written result over a good previous one.
+  const tmp = `${outPath}.tmp`;
+  await wb.xlsx.writeFile(tmp);
+  renameSync(tmp, outPath);
 }
 
 // SuppressionStore — the GLOBAL do-not-send list (hard bounces / complaints). A

@@ -91,5 +91,14 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       tokenSecret: env.SHOP_URL_TOKEN_SECRET || '',
       tokenParam: env.SHOP_URL_TOKEN_PARAM || 'ref',
     },
+    // CMP backend for the image-enrich tool. baseUrl defaults to dev; scope decides
+    // the signin endpoint. Credentials are blank unless set in .env (checked by the
+    // enrich CLI before any call) — never hardcoded.
+    api: {
+      baseUrl: (env.CMP_API_BASE_URL || 'https://api.dev.cmpup.com').replace(/\/+$/, ''),
+      scope: env.CMP_API_SCOPE === 'external' ? 'external' : 'internal',
+      email: env.CMP_API_EMAIL || '',
+      password: env.CMP_API_PASSWORD || '',
+    },
   };
 }
